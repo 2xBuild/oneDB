@@ -2,6 +2,7 @@ import type { NextAuthConfig } from "next-auth";
 import NextAuth from "next-auth";
 import GoogleProvider from "next-auth/providers/google";
 import GitHubProvider from "next-auth/providers/github";
+import DiscordProvider from "next-auth/providers/discord";
 import { db } from "./db";
 import { users, accounts } from "./db/schema";
 import { eq, and } from "drizzle-orm";
@@ -30,6 +31,10 @@ export const authConfig: NextAuthConfig = {
           image: profile.avatar_url,
         };
       },
+    }),
+    DiscordProvider({
+      clientId: process.env.DISCORD_CLIENT_ID!,
+      clientSecret: process.env.DISCORD_CLIENT_SECRET!,
     }),
   ],
   callbacks: {
@@ -64,7 +69,7 @@ export const authConfig: NextAuthConfig = {
       }
 
       try {
-        const provider = account.provider as "google" | "github";
+        const provider = account.provider as "google" | "github" | "discord";
         const providerAccountId = account.providerAccountId;
 
         // Check if account already exists

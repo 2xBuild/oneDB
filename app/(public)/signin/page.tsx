@@ -6,6 +6,7 @@ import Link from "next/link"
 import { signIn } from "next-auth/react"
 import GoogleIcon from "./googleIcon"
 import GitHubIcon from "./githubIcon"
+import DiscordIcon from "./discordIcon"
 
 function SignInContent() {
   const searchParams = useSearchParams();
@@ -13,6 +14,7 @@ function SignInContent() {
   const [acceptedTerms, setAcceptedTerms] = useState(false);
   const [isLoadingGoogle, setIsLoadingGoogle] = useState(false);
   const [isLoadingGitHub, setIsLoadingGitHub] = useState(false);
+  const [isLoadingDiscord, setIsLoadingDiscord] = useState(false);
 
   const handleGoogleLogin = async () => {
     if (!acceptedTerms) {
@@ -40,6 +42,19 @@ function SignInContent() {
     }
   };
 
+  const handleDiscordLogin = async () => {
+    if (!acceptedTerms) {
+      return;
+    }
+    setIsLoadingDiscord(true);
+    try {
+      await signIn("discord", { callbackUrl: "/" });
+    } catch (error) {
+      console.error("Discord sign in error:", error);
+      setIsLoadingDiscord(false);
+    }
+  };
+
   return (
     <div className="flex flex-col items-center justify-center min-h-screen gap-4 px-4">
       <div className="w-full max-w-sm space-y-3">
@@ -52,7 +67,7 @@ function SignInContent() {
         
         <button
           onClick={handleGoogleLogin}
-          disabled={!acceptedTerms || isLoadingGoogle || isLoadingGitHub}
+          disabled={!acceptedTerms || isLoadingGoogle || isLoadingGitHub || isLoadingDiscord}
           className="w-full flex items-center justify-center gap-2 px-6 py-3 border border-foreground/20 rounded-lg hover:bg-foreground/5 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
         >
           <GoogleIcon className="w-5 h-5" />
@@ -61,11 +76,20 @@ function SignInContent() {
 
         <button
           onClick={handleGitHubLogin}
-          disabled={!acceptedTerms || isLoadingGoogle || isLoadingGitHub}
+          disabled={!acceptedTerms || isLoadingGoogle || isLoadingGitHub || isLoadingDiscord}
           className="w-full flex items-center justify-center gap-2 px-6 py-3 border border-foreground/20 rounded-lg hover:bg-foreground/5 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
         >
           <GitHubIcon className="w-5 h-5" />
           <span>{isLoadingGitHub ? "Signing in..." : "Continue with GitHub"}</span>
+        </button>
+
+        <button
+          onClick={handleDiscordLogin}
+          disabled={!acceptedTerms || isLoadingGoogle || isLoadingGitHub || isLoadingDiscord}
+          className="w-full flex items-center justify-center gap-2 px-6 py-3 border border-foreground/20 rounded-lg hover:bg-foreground/5 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+        >
+          <DiscordIcon className="w-5 h-5" />
+          <span>{isLoadingDiscord ? "Signing in..." : "Continue with Discord"}</span>
         </button>
 
         <div className="flex items-start gap-2 pt-2">
