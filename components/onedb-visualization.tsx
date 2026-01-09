@@ -114,8 +114,8 @@ export default function OneDBVisualization() {
                     </Button>
                     <Button 
                         asChild 
-                        variant="outline"
-                        className="h-10 px-6 rounded-md border border-border bg-background text-foreground hover:bg-accent/30 hover:text-foreground transition-all duration-200 font-medium text-sm"
+                        variant="secondary"
+                        className="h-10 px-6 rounded-md border border-border bg-background  text-primary hover:bg-primary/30 hover:text-primary  font-medium text-sm text-primary"
                     >
                         <Link href="/db">EXPLORE DB</Link>
                     </Button>

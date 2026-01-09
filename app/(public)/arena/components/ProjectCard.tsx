@@ -68,7 +68,7 @@ export default function ProjectCard({ project, likeAggregation, commentCount = 0
         {/* Visit Icon */}
         {/* External link: use live link if present, else fallback to github. Show with arrow */}
         {project.liveLink || project.githubLink ? (
-          <Button variant="secondary" size="icon" asChild>
+          <Button variant="link" size="icon" asChild>
             <Link href={project.liveLink || project.githubLink || ''} target="_blank" rel="noopener noreferrer">
               <ExternalLink className="h-5 w-5 text-muted-foreground transition-colors" />
             </Link>

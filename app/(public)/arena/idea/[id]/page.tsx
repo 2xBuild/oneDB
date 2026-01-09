@@ -5,7 +5,7 @@ import { useParams, useRouter } from "next/navigation";
 import Image from "next/image";
 import Link from "next/link";
 import { ArrowLeft, MessageCircle, Pencil } from "lucide-react";
-import { Button, LikeDislike, CommentThread } from "@/components/ui";
+import { Button, LikeDislike, CommentThread, Textarea } from "@/components/ui";
 import { apiClient } from "@/lib/api";
 import { useAuth } from "@/contexts/auth-context";
 import { buildCommentTree, countAllComments } from "@/lib/comments";
@@ -344,11 +344,10 @@ export default function IdeaPage() {
         {/* Comment Form */}
         {isAuthenticated ? (
           <div className="mb-6 space-y-2">
-            <textarea
+            <Textarea
               value={commentContent}
               onChange={(e) => setCommentContent(e.target.value)}
               placeholder="Write a comment..."
-              className="w-full p-3 border border-accent rounded-md resize-none"
               rows={4}
             />
             <Button

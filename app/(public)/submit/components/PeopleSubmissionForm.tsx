@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Button, Input } from "@/components/ui";
+import { Button, Input, Textarea } from "@/components/ui";
 import { apiClient } from "@/lib/api";
 import { normalizePlatformName } from "@/lib/format-utils";
 
@@ -96,10 +96,9 @@ export default function PeopleSubmissionForm({
 
       <div>
         <label className="block text-sm font-medium mb-2">Description</label>
-        <textarea
+        <Textarea
           value={formData.description}
           onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-          className="w-full p-3 border rounded-md resize-none"
           rows={4}
           maxLength={5000}
         />

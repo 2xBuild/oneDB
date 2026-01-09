@@ -3,6 +3,7 @@
 import * as React from "react";
 import { Reply, Pencil, ChevronRight, ChevronDown } from "lucide-react";
 import { Button } from "./button";
+import { Textarea } from "./textarea";
 import { cn } from "./lib/utils";
 
 export interface Comment {
@@ -228,10 +229,9 @@ function CommentItem({
         {/* Comment Content */}
         {isEditing ? (
           <div className="space-y-2 mb-2">
-            <textarea
+            <Textarea
               value={editContent}
               onChange={(e) => setEditContent(e.target.value)}
-              className="w-full p-2 border border-accent rounded-md resize-none"
               rows={3}
             />
             <div className="flex gap-2">
@@ -283,11 +283,10 @@ function CommentItem({
         {isReplying && canReply && (
           <div className="mt-2 mb-2">
             <div className="space-y-2">
-              <textarea
+              <Textarea
                 value={replyContent}
                 onChange={(e) => setReplyContent(e.target.value)}
                 placeholder="Write a reply..."
-                className="w-full p-2 border border-accent rounded-md resize-none bg-background focus:outline-none focus:ring-2 focus:ring-accent"
                 rows={3}
               />
               <div className="flex gap-2">
