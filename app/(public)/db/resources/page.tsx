@@ -46,7 +46,7 @@ export default function ResourcesPage() {
         category: categoryFilter || undefined,
         tags: tagFilter ? [tagFilter] : undefined,
       });
-      const resourcesData = res.data;
+      const resourcesData = res.data || [];
       
       // Fetching likes for each resource
       const resourcesWithLikes = await Promise.all(

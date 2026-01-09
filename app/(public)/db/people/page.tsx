@@ -58,7 +58,7 @@ export default function PeoplePage() {
         platform: platformFilter ? normalizePlatformName(platformFilter) : undefined,
         tags: tagFilter ? [tagFilter] : undefined,
       });
-      const peopleData = res.data;
+      const peopleData = res.data || [];
       
       // Fetching likes for each person
       const peopleWithLikes = await Promise.all(

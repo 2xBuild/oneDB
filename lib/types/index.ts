@@ -21,6 +21,12 @@ export interface Project {
   authorId: string;
   createdAt: Date;
   updatedAt: Date;
+  author?: {
+    id: string;
+    name: string | null;
+    email: string;
+    avatar: string | null;
+  } | null;
 }
 
 export interface Idea {
@@ -32,6 +38,12 @@ export interface Idea {
   authorId: string;
   createdAt: Date;
   updatedAt: Date;
+  author?: {
+    id: string;
+    name: string | null;
+    email: string;
+    avatar: string | null;
+  } | null;
 }
 
 export interface Comment {
@@ -43,6 +55,13 @@ export interface Comment {
   parentId: string | null;
   createdAt: Date;
   isEdited: boolean;
+  replies?: Comment[];
+  author?: {
+    id: string;
+    name: string | null;
+    email: string;
+    avatar: string | null;
+  } | null;
 }
 
 export interface Like {

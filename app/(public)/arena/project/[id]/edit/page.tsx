@@ -32,7 +32,7 @@ export default function EditProjectPage() {
       const projectData = res.data;
 
       // Checking if user is the author
-      if (!user || !projectData.author || user.id !== projectData.author.id) {
+      if (!user || !projectData || !projectData.author || user.id !== projectData.author.id) {
         router.push(`/arena/project/${id}`);
         return;
       }

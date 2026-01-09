@@ -46,7 +46,7 @@ export default function AppsPage() {
         category: categoryFilter || undefined,
         tags: tagFilter ? [tagFilter] : undefined,
       });
-      const appsData = res.data;
+      const appsData = res.data || [];
       
       // Fetching likes for each app
       const appsWithLikes = await Promise.all(

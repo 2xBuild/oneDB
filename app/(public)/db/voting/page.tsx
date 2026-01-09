@@ -22,7 +22,7 @@ export default function VotingPage() {
   const fetchVotingData = async () => {
     try {
       const res = await apiClient.getVotingData();
-      setVotingData(res.data);
+      setVotingData(res.data || null);
     } catch (error) {
       console.error("Error fetching voting data:", error);
     } finally {

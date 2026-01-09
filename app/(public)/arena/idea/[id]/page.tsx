@@ -37,15 +37,15 @@ export default function IdeaPage() {
         apiClient.getIdeaComments(id).catch(() => ({ data: [] })),
       ]);
 
-      setIdea(ideaRes.data);
+      setIdea(ideaRes.data || null);
       // Normalize like aggregation to ensure all values are numbers
       const normalizedLikes = {
-        likes: Number(likesRes.data.likes) || 0,
-        dislikes: Number(likesRes.data.dislikes) || 0,
-        total: Number(likesRes.data.total) || 0,
+        likes: Number(likesRes.data?.likes) || 0,
+        dislikes: Number(likesRes.data?.dislikes) || 0,
+        total: Number(likesRes.data?.total) || 0,
       };
       setLikeAggregation(normalizedLikes);
-      setComments(buildCommentTree(commentsRes.data));
+      setComments(buildCommentTree(commentsRes.data || []));
     } catch (error) {
       console.error("Error fetching idea:", error);
     } finally {
@@ -138,21 +138,21 @@ export default function IdeaPage() {
         // Already updated optimistically, just refresh to ensure sync
         const likesRes = await apiClient.getIdeaLikes(id);
         const normalizedLikes = {
-          likes: Number(likesRes.data.likes) || 0,
-          dislikes: Number(likesRes.data.dislikes) || 0,
-          total: Number(likesRes.data.total) || 0,
+          likes: Number(likesRes.data?.likes) || 0,
+          dislikes: Number(likesRes.data?.dislikes) || 0,
+          total: Number(likesRes.data?.total) || 0,
         };
         setLikeAggregation(normalizedLikes);
       } else {
         // Like or update like/dislike
         const res = await apiClient.likeIdea(id, isLike);
-        setUserLike(res.data);
+        setUserLike(res.data || null);
         // Refresh aggregation to ensure sync
         const likesRes = await apiClient.getIdeaLikes(id);
         const normalizedLikes = {
-          likes: Number(likesRes.data.likes) || 0,
-          dislikes: Number(likesRes.data.dislikes) || 0,
-          total: Number(likesRes.data.total) || 0,
+          likes: Number(likesRes.data?.likes) || 0,
+          dislikes: Number(likesRes.data?.dislikes) || 0,
+          total: Number(likesRes.data?.total) || 0,
         };
         setLikeAggregation(normalizedLikes);
       }

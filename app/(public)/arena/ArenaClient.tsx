@@ -76,7 +76,7 @@ export default function ArenaClient() {
             ]);
 
             // Filtering by week
-            const filteredProjects = projectsRes.data
+            const filteredProjects = (projectsRes.data || [])
                 .filter((p: Project) => {
                     const createdAt = new Date(p.createdAt);
                     return createdAt >= weekStart && createdAt <= weekEnd;
@@ -89,15 +89,15 @@ export default function ArenaClient() {
                     return {
                         ...p,
                         likeAggregation: {
-                            likes: Number(likesRes.data.likes) || 0,
-                            dislikes: Number(likesRes.data.dislikes) || 0,
-                            total: Number(likesRes.data.total) || 0,
+                            likes: Number(likesRes.data?.likes) || 0,
+                            dislikes: Number(likesRes.data?.dislikes) || 0,
+                            total: Number(likesRes.data?.total) || 0,
                         },
-                        commentCount: commentsRes.data.length || 0,
+                        commentCount: commentsRes.data?.length || 0,
                     };
                 });
 
-            const filteredIdeas = ideasRes.data
+            const filteredIdeas = (ideasRes.data || [])
                 .filter((i: Idea) => {
                     const createdAt = new Date(i.createdAt);
                     return createdAt >= weekStart && createdAt <= weekEnd;
@@ -110,11 +110,11 @@ export default function ArenaClient() {
                     return {
                         ...i,
                         likeAggregation: {
-                            likes: Number(likesRes.data.likes) || 0,
-                            dislikes: Number(likesRes.data.dislikes) || 0,
-                            total: Number(likesRes.data.total) || 0,
+                            likes: Number(likesRes.data?.likes) || 0,
+                            dislikes: Number(likesRes.data?.dislikes) || 0,
+                            total: Number(likesRes.data?.total) || 0,
                         },
-                        commentCount: commentsRes.data.length || 0,
+                        commentCount: commentsRes.data?.length || 0,
                     };
                 });
 

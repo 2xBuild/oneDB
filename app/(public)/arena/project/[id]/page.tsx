@@ -39,12 +39,12 @@ export default function ProjectPage() {
         apiClient.getProjectComments(id).catch(() => ({ data: [] })),
       ]);
 
-      setProject(projectRes.data);
+      setProject(projectRes.data || null);
       // Normalize like aggregation to ensure all values are numbers
       const normalizedLikes = {
-        likes: Number(likesRes.data.likes) || 0,
-        dislikes: Number(likesRes.data.dislikes) || 0,
-        total: Number(likesRes.data.total) || 0,
+        likes: Number(likesRes.data?.likes) || 0,
+        dislikes: Number(likesRes.data?.dislikes) || 0,
+        total: Number(likesRes.data?.total) || 0,
       };
       setLikeAggregation(normalizedLikes);
       
@@ -56,7 +56,7 @@ export default function ProjectPage() {
         console.log("First Comment Author:", commentsRes.data[0]?.author);
       }
       
-      const commentTree = buildCommentTree(commentsRes.data);
+      const commentTree = buildCommentTree(commentsRes.data || []);
       console.log("Comment Tree:", commentTree);
       if (commentTree.length > 0) {
         console.log("First Comment in Tree:", commentTree[0]);
@@ -167,21 +167,21 @@ export default function ProjectPage() {
         // Already updated optimistically, just refresh to ensure sync
         const likesRes = await apiClient.getProjectLikes(id);
         const normalizedLikes = {
-          likes: Number(likesRes.data.likes) || 0,
-          dislikes: Number(likesRes.data.dislikes) || 0,
-          total: Number(likesRes.data.total) || 0,
+          likes: Number(likesRes.data?.likes) || 0,
+          dislikes: Number(likesRes.data?.dislikes) || 0,
+          total: Number(likesRes.data?.total) || 0,
         };
         setLikeAggregation(normalizedLikes);
       } else {
         // Like or update like/dislike
         const res = await apiClient.likeProject(id, isLike);
-        setUserLike(res.data);
+        setUserLike(res.data || null);
         // Refresh aggregation to ensure sync
         const likesRes = await apiClient.getProjectLikes(id);
         const normalizedLikes = {
-          likes: Number(likesRes.data.likes) || 0,
-          dislikes: Number(likesRes.data.dislikes) || 0,
-          total: Number(likesRes.data.total) || 0,
+          likes: Number(likesRes.data?.likes) || 0,
+          dislikes: Number(likesRes.data?.dislikes) || 0,
+          total: Number(likesRes.data?.total) || 0,
         };
         setLikeAggregation(normalizedLikes);
       }

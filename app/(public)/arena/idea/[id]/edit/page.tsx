@@ -29,7 +29,7 @@ export default function EditIdeaPage() {
       const ideaData = res.data;
 
       // Checking if user is the author
-      if (!user || !ideaData.author || user.id !== ideaData.author.id) {
+      if (!user || !ideaData || !ideaData.author || user.id !== ideaData.author.id) {
         router.push(`/arena/idea/${id}`);
         return;
       }
