@@ -3,7 +3,7 @@
 import React, { createContext, useContext, useEffect, useState, useCallback } from "react";
 import { useSession, signOut as nextAuthSignOut } from "next-auth/react";
 import { apiClient } from "@/lib/api";
-import type { User } from "@/lib/types";
+import type { User } from "@/lib/types"; 
 
 interface AuthContextType {
   user: User | null;
