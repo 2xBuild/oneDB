@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 import { Button } from "@/components/ui";
 import { ArrowRight } from "lucide-react";
 import { apiClient } from "@/lib/api";
-import type { Project, Idea, LikeAggregation } from "@onedb/types";
+import type { Project, Idea, LikeAggregation } from "@/lib/types";
 import ProjectCard from "./components/ProjectCard";
 import IdeaCard from "./components/IdeaCard";
 import SortSelector from "./components/SortSelector";

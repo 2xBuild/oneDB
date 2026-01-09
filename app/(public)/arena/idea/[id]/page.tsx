@@ -9,7 +9,7 @@ import { Button, LikeDislike, CommentThread } from "@/components/ui";
 import { apiClient } from "@/lib/api";
 import { useAuth } from "@/contexts/auth-context";
 import { buildCommentTree, countAllComments } from "@/lib/comments";
-import type { Idea, LikeAggregation, Comment, Like } from "@onedb/types";
+import type { Idea, LikeAggregation, Comment, Like } from "@/lib/types";
 
 export default function IdeaPage() {
   const params = useParams();

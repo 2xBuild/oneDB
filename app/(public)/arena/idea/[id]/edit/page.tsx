@@ -5,7 +5,7 @@ import { useParams, useRouter } from "next/navigation";
 import { Button, Input } from "@/components/ui";
 import { apiClient } from "@/lib/api";
 import { useAuth } from "@/contexts/auth-context";
-import type { Idea } from "@onedb/types";
+import type { Idea } from "@/lib/types";
 
 export default function EditIdeaPage() {
   const params = useParams();

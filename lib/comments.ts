@@ -1,4 +1,4 @@
-import type { Comment } from "@onedb/types";
+import type { Comment } from "@/lib/types";
 
 // Builds nested comment tree from flat array; comments with parentId nest under parent's replies
 export function buildCommentTree(comments: Comment[]): Comment[] {

@@ -2,9 +2,6 @@
   "name": "onedb",
   "version": "0.1.0",
   "private": true,
-  "workspaces": [
-    "packages/*"
-  ],
   "scripts": {
     "dev": "next dev",
     "build": "next build",
@@ -16,7 +13,6 @@
     "db:studio": "drizzle-kit studio"
   },
   "dependencies": {
-    "@onedb/types": "*",
     "@radix-ui/react-dialog": "^1.1.15",
     "@radix-ui/react-dropdown-menu": "^2.1.16",
     "@radix-ui/react-slot": "^1.2.4",

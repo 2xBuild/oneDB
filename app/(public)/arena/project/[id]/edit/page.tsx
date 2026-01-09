@@ -5,7 +5,7 @@ import { useParams, useRouter } from "next/navigation";
 import { Button, Input } from "@/components/ui";
 import { apiClient } from "@/lib/api";
 import { useAuth } from "@/contexts/auth-context";
-import type { Project } from "@onedb/types";
+import type { Project } from "@/lib/types";
 
 export default function EditProjectPage() {
   const params = useParams();

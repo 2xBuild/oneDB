@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { ThumbsUp, ThumbsDown, MessageCircle } from "lucide-react";
-import type { Idea, LikeAggregation } from "@onedb/types";
+import type { Idea, LikeAggregation } from "@/lib/types";
 
 interface IdeaCardProps {
   idea: Idea;

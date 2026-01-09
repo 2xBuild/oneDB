@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { apiClient } from "@/lib/api";
 import { Button } from "@/components/ui";
 import { useAuth } from "@/contexts/auth-context";
-import type { VotingData, PersonWithVotes, ResourceWithVotes, AppWithVotes } from "@onedb/types";
+import type { VotingData, PersonWithVotes, ResourceWithVotes, AppWithVotes } from "@/lib/types";
 import { ThumbsUp, ThumbsDown, CheckCircle2 } from "lucide-react";
 
 export default function VotingPage() {

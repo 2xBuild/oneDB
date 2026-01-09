@@ -43,10 +43,8 @@ This is a Next.js application with API routes, running on Bun.
 - Built with Radix UI primitives
 - Includes: buttons, dialogs, dropdowns, star ratings, etc.
 
-### Shared Packages
-- `@onedb/types` — Shared TypeScript types
-- `packages/eslint-config` — ESLint configurations
-- `packages/typescript-config` — Shared tsconfig
+### Type Definitions
+- Type definitions are located in `lib/types/index.ts`
 
 ## Getting Started
 

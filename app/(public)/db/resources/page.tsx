@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { apiClient } from "@/lib/api";
-import type { Resource, LikeAggregation } from "@onedb/types";
+import type { Resource, LikeAggregation } from "@/lib/types";
 import { Input, LikeDislike } from "@/components/ui";
 import Image from "next/image";
 import { ExternalLink, Globe, ChevronDown } from "lucide-react";

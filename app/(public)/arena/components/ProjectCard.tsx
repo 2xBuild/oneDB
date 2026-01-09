@@ -3,7 +3,7 @@
 import Link from "next/link";
 import Image from "next/image";
 import { ThumbsUp, ThumbsDown, MessageCircle, ExternalLink } from "lucide-react";
-import type { Project, LikeAggregation } from "@onedb/types";
+import type { Project, LikeAggregation } from "@/lib/types";
 import { Button } from "@/components/ui";
 
 interface ProjectCardProps {
