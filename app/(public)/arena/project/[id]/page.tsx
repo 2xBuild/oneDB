@@ -4,8 +4,8 @@ import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import Image from "next/image";
 import Link from "next/link";
-import { Github, ExternalLink, MessageCircle, ArrowLeft, Pencil } from "lucide-react";
-import { Button, LikeDislike, CommentThread, Textarea } from "@/components/ui";
+import { Github, ExternalLink, MessageCircle, ArrowLeft, Pencil, Trash2 } from "lucide-react";
+import { Button, LikeDislike, CommentThread, Textarea, Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui";
 import { apiClient } from "@/lib/api";
 import { useAuth } from "@/contexts/auth-context";
 import { buildCommentTree, countAllComments } from "@/lib/comments";
@@ -26,6 +26,8 @@ export default function ProjectPage() {
   const [showDiscussion, setShowDiscussion] = useState(false);
   const [commentContent, setCommentContent] = useState("");
   const [submitting, setSubmitting] = useState(false);
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+  const [deleting, setDeleting] = useState(false);
 
   useEffect(() => {
     fetchData();
@@ -249,6 +251,17 @@ export default function ProjectPage() {
     }
   };
 
+  const handleDeleteProject = async () => {
+    setDeleting(true);
+    try {
+      await apiClient.deleteProject(id);
+      router.push("/arena");
+    } catch (error) {
+      console.error("Error deleting project:", error);
+      setDeleting(false);
+    }
+  };
+
   if (loading) {
     return (
       <div className="container mx-auto px-4 py-8 max-w-4xl">
@@ -295,15 +308,26 @@ export default function ProjectPage() {
             <div className="flex items-center gap-2 mb-2">
               <h1 className="text-4xl font-bold">{project.title}</h1>
               {isAuthenticated && user && project.author && user.id === project.author.id && (
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  onClick={() => router.push(`/arena/project/${id}/edit`)}
-                  className="h-8 w-8"
-                  title="Edit project"
-                >
-                  <Pencil className="h-4 w-4" />
-                </Button>
+                <>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={() => router.push(`/arena/project/${id}/edit`)}
+                    className="h-8 w-8"
+                    title="Edit project"
+                  >
+                    <Pencil className="h-4 w-4" />
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={() => setShowDeleteDialog(true)}
+                    className="h-8 w-8 text-destructive hover:text-destructive"
+                    title="Delete project"
+                  >
+                    <Trash2 className="h-4 w-4" />
+                  </Button>
+                </>
               )}
             </div>
             {project.tagline && (
@@ -447,6 +471,34 @@ export default function ProjectPage() {
           </div>
         )}
       </div>
+
+      {/* Delete Confirmation Dialog */}
+      <Dialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Delete Project</DialogTitle>
+            <DialogDescription>
+              Are you sure you want to delete this project? This action cannot be undone and will permanently delete the project and all associated comments and likes.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => setShowDeleteDialog(false)}
+              disabled={deleting}
+            >
+              Cancel
+            </Button>
+            <Button
+              variant="destructive"
+              onClick={handleDeleteProject}
+              disabled={deleting}
+            >
+              {deleting ? "Deleting..." : "Delete"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

@@ -4,8 +4,8 @@ import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import Image from "next/image";
 import Link from "next/link";
-import { ArrowLeft, MessageCircle, Pencil } from "lucide-react";
-import { Button, LikeDislike, CommentThread, Textarea } from "@/components/ui";
+import { ArrowLeft, MessageCircle, Pencil, Trash2 } from "lucide-react";
+import { Button, LikeDislike, CommentThread, Textarea, Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui";
 import { apiClient } from "@/lib/api";
 import { useAuth } from "@/contexts/auth-context";
 import { buildCommentTree, countAllComments } from "@/lib/comments";
@@ -24,6 +24,8 @@ export default function IdeaPage() {
   const [loading, setLoading] = useState(true);
   const [commentContent, setCommentContent] = useState("");
   const [submitting, setSubmitting] = useState(false);
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+  const [deleting, setDeleting] = useState(false);
 
   useEffect(() => {
     fetchData();
@@ -220,6 +222,17 @@ export default function IdeaPage() {
     }
   };
 
+  const handleDeleteIdea = async () => {
+    setDeleting(true);
+    try {
+      await apiClient.deleteIdea(id);
+      router.push("/arena");
+    } catch (error) {
+      console.error("Error deleting idea:", error);
+      setDeleting(false);
+    }
+  };
+
   if (loading) {
     return (
       <div className="container mx-auto px-4 py-8 max-w-4xl">
@@ -253,15 +266,26 @@ export default function IdeaPage() {
         <div className="flex items-center gap-2 flex-1">
           <h1 className="text-4xl font-bold">{idea.title}</h1>
           {isAuthenticated && user && idea.author && user.id === idea.author.id && (
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={() => router.push(`/arena/idea/${id}/edit`)}
-              className="h-8 w-8"
-              title="Edit idea"
-            >
-              <Pencil className="h-4 w-4" />
-            </Button>
+            <>
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={() => router.push(`/arena/idea/${id}/edit`)}
+                className="h-8 w-8"
+                title="Edit idea"
+              >
+                <Pencil className="h-4 w-4" />
+              </Button>
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={() => setShowDeleteDialog(true)}
+                className="h-8 w-8 text-destructive hover:text-destructive"
+                title="Delete idea"
+              >
+                <Trash2 className="h-4 w-4" />
+              </Button>
+            </>
           )}
         </div>
         <div className="flex-shrink-0">
@@ -375,6 +399,34 @@ export default function IdeaPage() {
           onDelete={handleDeleteComment}
         />
       </div>
+
+      {/* Delete Confirmation Dialog */}
+      <Dialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Delete Idea</DialogTitle>
+            <DialogDescription>
+              Are you sure you want to delete this idea? This action cannot be undone and will permanently delete the idea and all associated comments and likes.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => setShowDeleteDialog(false)}
+              disabled={deleting}
+            >
+              Cancel
+            </Button>
+            <Button
+              variant="destructive"
+              onClick={handleDeleteIdea}
+              disabled={deleting}
+            >
+              {deleting ? "Deleting..." : "Delete"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
