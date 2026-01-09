@@ -9,10 +9,11 @@ const commentsService = new CommentsService();
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const comment = await commentsService.findById(params.id);
+    const { id } = await params;
+    const comment = await commentsService.findById(id);
     return success(comment);
   } catch (err) {
     if (err instanceof NotFoundError) {
@@ -24,13 +25,14 @@ export async function GET(
 
 export async function PUT(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params;
     const user = await requireAuth();
     const body = await request.json();
     const validated = updateCommentSchema.parse(body);
-    const comment = await commentsService.update(params.id, user.id, validated);
+    const comment = await commentsService.update(id, user.id, validated);
     return success(comment);
   } catch (err) {
     if (err instanceof NotFoundError) {
@@ -48,11 +50,12 @@ export async function PUT(
 
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params;
     const user = await requireAuth();
-    await commentsService.delete(params.id, user.id);
+    await commentsService.delete(id, user.id);
     return success({ message: "Comment deleted successfully" });
   } catch (err) {
     if (err instanceof NotFoundError) {

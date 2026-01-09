@@ -8,11 +8,12 @@ const votesService = new VotesService();
 
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params;
     const user = await requireAuth();
-    await votesService.removeVote(user.id, params.id);
+    await votesService.removeVote(user.id, id);
     return success({ message: "Vote removed successfully" });
   } catch (err) {
     if (err instanceof NotFoundError) {

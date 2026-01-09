@@ -6,10 +6,11 @@ const likesService = new LikesService();
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const aggregation = await likesService.getIdeaLikeAggregation(params.id);
+    const { id } = await params;
+    const aggregation = await likesService.getIdeaLikeAggregation(id);
     return success(aggregation);
   } catch (err) {
     return NextResponse.json(

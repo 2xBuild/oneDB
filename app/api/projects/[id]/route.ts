@@ -9,10 +9,11 @@ const projectsService = new ProjectsService();
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const project = await projectsService.findById(params.id);
+    const { id } = await params;
+    const project = await projectsService.findById(id);
     return success(project);
   } catch (err) {
     if (err instanceof NotFoundError) {
@@ -24,13 +25,14 @@ export async function GET(
 
 export async function PUT(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params;
     const user = await requireAuth();
     const body = await request.json();
     const validated = updateProjectSchema.parse(body);
-    const project = await projectsService.update(params.id, user.id, validated);
+    const project = await projectsService.update(id, user.id, validated);
     return success(project);
   } catch (err) {
     if (err instanceof NotFoundError) {
@@ -48,11 +50,12 @@ export async function PUT(
 
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params;
     const user = await requireAuth();
-    await projectsService.delete(params.id, user.id);
+    await projectsService.delete(id, user.id);
     return success({ message: "Project deleted successfully" });
   } catch (err) {
     if (err instanceof NotFoundError) {

@@ -12,13 +12,14 @@ const likeInputSchema = z.object({
 
 export async function POST(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params;
     const user = await requireAuth();
     const body = await request.json();
     const { isLike } = likeInputSchema.parse(body);
-    const like = await likesService.likeResource(user.id, params.id, isLike);
+    const like = await likesService.likeResource(user.id, id, isLike);
     return success(like, 201);
   } catch (err) {
     if (err instanceof z.ZodError) {
@@ -30,11 +31,12 @@ export async function POST(
 
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params;
     const user = await requireAuth();
-    await likesService.unlikeResource(user.id, params.id);
+    await likesService.unlikeResource(user.id, id);
     return success({ message: "Unliked successfully" });
   } catch (err) {
     return error("Internal server error", 500);

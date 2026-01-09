@@ -7,10 +7,11 @@ const resourcesService = new ResourcesService();
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const resource = await resourcesService.findById(params.id);
+    const { id } = await params;
+    const resource = await resourcesService.findById(id);
     return success(resource);
   } catch (err) {
     if (err instanceof NotFoundError) {

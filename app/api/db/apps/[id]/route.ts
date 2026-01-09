@@ -7,10 +7,11 @@ const appsService = new AppsService();
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const app = await appsService.findById(params.id);
+    const { id } = await params;
+    const app = await appsService.findById(id);
     return success(app);
   } catch (err) {
     if (err instanceof NotFoundError) {

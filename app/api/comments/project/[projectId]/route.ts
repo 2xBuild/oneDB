@@ -6,10 +6,11 @@ const commentsService = new CommentsService();
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: { projectId: string } }
+  { params }: { params: Promise<{ projectId: string }> }
 ) {
   try {
-    const comments = await commentsService.findByProject(params.projectId);
+    const { projectId } = await params;
+    const comments = await commentsService.findByProject(projectId);
     return success(comments);
   } catch (err) {
     return NextResponse.json(

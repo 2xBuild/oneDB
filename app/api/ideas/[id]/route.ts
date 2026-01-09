@@ -9,10 +9,11 @@ const ideasService = new IdeasService();
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const idea = await ideasService.findById(params.id);
+    const { id } = await params;
+    const idea = await ideasService.findById(id);
     return success(idea);
   } catch (err) {
     if (err instanceof NotFoundError) {
@@ -24,13 +25,14 @@ export async function GET(
 
 export async function PUT(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params;
     const user = await requireAuth();
     const body = await request.json();
     const validated = updateIdeaSchema.parse(body);
-    const idea = await ideasService.update(params.id, user.id, validated);
+    const idea = await ideasService.update(id, user.id, validated);
     return success(idea);
   } catch (err) {
     if (err instanceof NotFoundError) {
@@ -48,11 +50,12 @@ export async function PUT(
 
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params;
     const user = await requireAuth();
-    await ideasService.delete(params.id, user.id);
+    await ideasService.delete(id, user.id);
     return success({ message: "Idea deleted successfully" });
   } catch (err) {
     if (err instanceof NotFoundError) {

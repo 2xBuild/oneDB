@@ -7,10 +7,11 @@ const peopleService = new PeopleService();
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const person = await peopleService.findById(params.id);
+    const { id } = await params;
+    const person = await peopleService.findById(id);
     return success(person);
   } catch (err) {
     if (err instanceof NotFoundError) {
