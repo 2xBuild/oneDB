@@ -400,19 +400,19 @@ export default function ResourcesPage() {
                 </div>
 
                 {/* Category and Tags at Bottom */}
-                <div className="flex items-center gap-2 mt-3 pt-3 border-t border-border">
-                  <span className="px-2 py-1 text-xs bg-muted rounded-full whitespace-nowrap">
+                <div className="flex items-center gap-2 mt-3 pt-3 border-t border-border overflow-hidden">
+                  <span className="px-2 py-1 text-xs bg-muted rounded-full whitespace-nowrap flex-shrink-0">
                     {resource.category}
                   </span>
                   {resource.tags && resource.tags.length > 0 && (
-                    <>
-                      {resource.tags.map((tag, idx) => (
+                    <div className="flex items-center gap-2 overflow-hidden flex-1 min-w-0">
+                      {resource.tags.slice(0, 5).map((tag, idx) => (
                         <button
                           key={idx}
                           onClick={() => {
                             setSearchQuery(tag);
                           }}
-                          className={`px-2 py-1 text-xs rounded-full whitespace-nowrap transition-colors cursor-pointer ${
+                          className={`px-2 py-1 text-xs rounded-full whitespace-nowrap transition-colors cursor-pointer flex-shrink-0 ${
                             tagFilter === tag
                               ? "bg-primary text-primary-foreground"
                               : "bg-muted hover:bg-muted/80"
@@ -421,7 +421,12 @@ export default function ResourcesPage() {
                           {tag}
                         </button>
                       ))}
-                    </>
+                      {resource.tags.length > 5 && (
+                        <span className="text-xs text-muted-foreground flex-shrink-0">
+                          +{resource.tags.length - 5}
+                        </span>
+                      )}
+                    </div>
                   )}
                 </div>
               </div>

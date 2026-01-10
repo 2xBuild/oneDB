@@ -455,11 +455,11 @@ export default function PeoplePage() {
                 </div>
 
                 {/* Tags at Bottom with Followers Count */}
-                <div className="flex items-center justify-between mt-3 pt-3 border-t border-border">
-                  <div className="flex items-center gap-2">
+                <div className="flex items-center justify-between mt-3 pt-3 border-t border-border gap-2 overflow-hidden">
+                  <div className="flex items-center gap-2 overflow-hidden flex-1 min-w-0">
                     {person.tags && person.tags.length > 0 && (
                       <>
-                        {person.tags.map((tag, idx) => (
+                        {person.tags.slice(0, 4).map((tag, idx) => (
                           <button
                             key={idx}
                             onClick={() => {
@@ -473,7 +473,7 @@ export default function PeoplePage() {
                               }
                               window.history.pushState({}, "", `?${params.toString()}`);
                             }}
-                            className={`px-2 py-1 text-xs rounded-full whitespace-nowrap transition-colors ${
+                            className={`px-2 py-1 text-xs rounded-full whitespace-nowrap transition-colors flex-shrink-0 ${
                               tagFilter === tag
                                 ? "bg-primary text-primary-foreground"
                                 : "bg-muted hover:bg-muted/80"
@@ -482,10 +482,15 @@ export default function PeoplePage() {
                             {capitalizeFirst(tag)}
                           </button>
                         ))}
+                        {person.tags.length > 4 && (
+                          <span className="text-xs text-muted-foreground flex-shrink-0">
+                            +{person.tags.length - 4}
+                          </span>
+                        )}
                       </>
                     )}
                   </div>
-                  <div className="text-xs text-muted-foreground flex items-center gap-1">
+                  <div className="text-xs text-muted-foreground flex items-center gap-1 flex-shrink-0 whitespace-nowrap">
                     {person.followersCount !== null && person.followersCount !== undefined ? (
                       <>
                         <span className="font-medium">{formatFollowerCount(person.followersCount)}</span>
