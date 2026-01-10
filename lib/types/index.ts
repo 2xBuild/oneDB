@@ -351,3 +351,32 @@ export interface VotingData {
   apps: AppWithVotes[];
 }
 
+// Contributors types
+export interface DbContributor {
+  userId: string;
+  name: string | null;
+  email: string;
+  avatar: string | null;
+  peopleCount: number;
+  resourcesCount: number;
+  appsCount: number;
+  totalSubmissions: number;
+}
+
+export interface GitHubContributor {
+  login: string;
+  avatar: string;
+  contributions: number;
+  profileUrl: string;
+}
+
+export interface ContributorsData {
+  pendingSubmissions: {
+    people: PersonWithVotes[];
+    resources: ResourceWithVotes[];
+    apps: AppWithVotes[];
+  };
+  dbContributors: DbContributor[];
+  githubContributors: GitHubContributor[];
+}
+

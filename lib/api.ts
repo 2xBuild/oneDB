@@ -24,6 +24,7 @@ import type {
   UpdateAppInput,
   CreateVoteInput,
   VotingData,
+  ContributorsData,
   PeopleFilters,
   ResourceFilters,
   AppFilters,
@@ -344,15 +345,20 @@ export class ApiClient {
 
   // Voting endpoints
   async getVotingData() {
-    return this.get<VotingData>("/db/voting");
+    return this.get<VotingData>("/db/contribution");
   }
 
   async vote(data: CreateVoteInput) {
-    return this.post<{ vote: Vote; approvalStatus: any }>("/db/voting/votes", data);
+    return this.post<{ vote: Vote; approvalStatus: any }>("/db/contribution/votes", data);
   }
 
   async removeVote(voteId: string) {
-    return this.delete<{ message: string }>(`/db/voting/votes/${voteId}`);
+    return this.delete<{ message: string }>(`/db/contribution/votes/${voteId}`);
+  }
+
+  // Contributors endpoints
+  async getContributorsData() {
+    return this.get<ContributorsData>("/db/contributors");
   }
 
   // Auth endpoints

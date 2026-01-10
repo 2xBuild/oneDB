@@ -117,19 +117,19 @@ function SubmitPageContent() {
       )}
       {submissionType === "people" && (
         <PeopleSubmissionForm
-          onSuccess={() => router.push("/db/voting")}
+          onSuccess={() => router.push("/db/contribution")}
           onCancel={() => setSubmissionType(null)}
         />
       )}
       {submissionType === "resource" && (
         <ResourceSubmissionForm
-          onSuccess={() => router.push("/db/voting")}
+          onSuccess={() => router.push("/db/contribution")}
           onCancel={() => setSubmissionType(null)}
         />
       )}
       {submissionType === "app" && (
         <AppSubmissionForm
-          onSuccess={() => router.push("/db/voting")}
+          onSuccess={() => router.push("/db/contribution")}
           onCancel={() => setSubmissionType(null)}
         />
       )}

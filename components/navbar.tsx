@@ -10,7 +10,7 @@ import { useAuth } from "@/contexts/auth-context"
 const navItems = [
     { name: "ARENA", href: "/arena" },
     { name: "DB", href: "/db" },
-    { name: "VOTE", href: "/db/voting" },
+    { name: "CONTRIBUTION", href: "/db/contribution" },
 ]
 
 export default function Navbar() {

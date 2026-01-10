@@ -148,7 +148,7 @@ onedb/
 1. Sign in with GitHub or Google
 2. Go to `/submit` and pick "Person", "App", or "Resource"
 3. Fill in the details and submit
-4. Your submission goes to `/db/voting` for community review
+4. Your submission goes to `/db/contribution` for community review
 5. Other users upvote or downvote
 6. Once it hits the approval threshold (10+ upvotes with 70%+ positive), it gets added to the main database
 
@@ -181,8 +181,8 @@ onedb/
 - `POST /api/db/apps` — Submit app
 - `GET /api/db/resources` — List approved resources
 - `POST /api/db/resources` — Submit resource
-- `GET /api/db/voting` — Get pending submissions
-- `POST /api/db/voting/votes` — Vote on a submission
+- `GET /api/db/contribution` — Get pending submissions
+- `POST /api/db/contribution/votes` — Vote on a submission
 
 ### Comments
 - `GET /api/comments/project/:projectId` — Get comments for project
