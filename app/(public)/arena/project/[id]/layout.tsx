@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { ProjectsService } from "@/lib/services/projects.service";
+import { getOgImageUrl } from "@/lib/utils/og-image";
 
 export async function generateMetadata({
   params,
@@ -22,7 +23,12 @@ export async function generateMetadata({
     const description = project.tagline || project.description || "Check out this project on oneDB";
     const tags = project.tags?.join(",") || "";
 
-    const ogImageUrl = `/api/og?type=project&title=${encodeURIComponent(title)}&description=${encodeURIComponent(description.substring(0, 120))}${tags ? `&tags=${encodeURIComponent(tags)}` : ""}`;
+    const ogImageUrl = getOgImageUrl({
+      type: "project",
+      title,
+      description: description.substring(0, 120),
+      tags: tags || undefined,
+    });
 
     return {
       title,

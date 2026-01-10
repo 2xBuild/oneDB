@@ -7,6 +7,7 @@ import Navbar from "@/components/navbar"
 import { AuthProvider } from "@/contexts/auth-context";
 import { Providers } from "@/components/providers";
 import { Analytics } from "@vercel/analytics/next";
+import { getOgImageUrl } from "@/lib/utils/og-image";
 
 import { Inter } from 'next/font/google';
 import { ThemeProvider } from "@/components/ui";
@@ -36,7 +37,11 @@ export const metadata: Metadata = {
     description: "Discover projects, ideas, people, apps, and resources all in one place. Explore, contribute, and build with the oneDB community.",
     images: [
       {
-        url: "/api/og?type=default&title=oneDB&description=Your one database for all resources, projects, and people",
+        url: getOgImageUrl({
+          type: "default",
+          title: "oneDB",
+          description: "Your one database for all resources, projects, and people",
+        }),
         width: 1200,
         height: 630,
         alt: "oneDB",
@@ -47,7 +52,11 @@ export const metadata: Metadata = {
     card: "summary_large_image",
     title: "oneDB - Your one database for everything you need",
     description: "Discover projects, ideas, people, apps, and resources all in one place.",
-    images: ["/api/og?type=default&title=oneDB&description=Your one database for all resources, projects, and people"],
+    images: [getOgImageUrl({
+      type: "default",
+      title: "oneDB",
+      description: "Your one database for all resources, projects, and people",
+    })],
     creator: "@onedb",
   },
   robots: {

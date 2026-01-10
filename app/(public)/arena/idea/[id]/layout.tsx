@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { IdeasService } from "@/lib/services/ideas.service";
+import { getOgImageUrl } from "@/lib/utils/og-image";
 
 export async function generateMetadata({
   params,
@@ -22,7 +23,12 @@ export async function generateMetadata({
     const description = idea.description || "Check out this idea on oneDB";
     const tags = idea.tags?.join(",") || "";
 
-    const ogImageUrl = `/api/og?type=idea&title=${encodeURIComponent(title)}&description=${encodeURIComponent(description.substring(0, 120))}${tags ? `&tags=${encodeURIComponent(tags)}` : ""}`;
+    const ogImageUrl = getOgImageUrl({
+      type: "idea",
+      title,
+      description: description.substring(0, 120),
+      tags: tags || undefined,
+    });
 
     return {
       title,

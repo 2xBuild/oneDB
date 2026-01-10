@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { getOgImageUrl } from "@/lib/utils/og-image";
 
 export const metadata: Metadata = {
   title: "Apps",
@@ -9,7 +10,11 @@ export const metadata: Metadata = {
     type: "website",
     images: [
       {
-        url: "/api/og?type=apps&title=Apps&description=Discover amazing apps and tools on oneDB",
+        url: getOgImageUrl({
+          type: "apps",
+          title: "Apps",
+          description: "Discover amazing apps and tools on oneDB",
+        }),
         width: 1200,
         height: 630,
         alt: "oneDB Apps",
@@ -20,7 +25,11 @@ export const metadata: Metadata = {
     card: "summary_large_image",
     title: "Apps | oneDB",
     description: "Discover amazing apps and tools on oneDB. Browse by category, search by tags, and find the perfect app for your needs.",
-    images: ["/api/og?type=apps&title=Apps&description=Discover amazing apps and tools on oneDB"],
+    images: [getOgImageUrl({
+      type: "apps",
+      title: "Apps",
+      description: "Discover amazing apps and tools on oneDB",
+    })],
   },
 };
 
