@@ -7,8 +7,9 @@ import { getCurrentUser } from "@/lib/middleware/auth";
 import { success } from "@/lib/utils/responses";
 import { db } from "@/lib/db";
 import { people, resources, apps, projects, ideas, users } from "@/lib/db/schema";
-import { sql, isNull } from "drizzle-orm";
+import { sql, isNull, eq } from "drizzle-orm";
 import { getGitHubContributors } from "@/lib/github";
+import { isUserAdmin } from "@/lib/utils/admin";
 
 const peopleService = new PeopleService();
 const resourcesService = new ResourcesService();
@@ -31,15 +32,24 @@ export async function GET(request: NextRequest) {
     const peopleWithVotes = await Promise.all(
       pendingPeople.map(async (person) => {
         const votes = await votesService.getVotesForSubmission(person.id);
-        const approvalStatus = await votesService.checkApprovalStatus(person.id);
+        const approvalStatus = await votesService.checkApprovalStatus(person.id, undefined, undefined, 50, 3);
         const userVote = userId
           ? await votesService.getUserVote(userId, person.id)
           : null;
+        
+        // Get submitter info
+        const submitter = await db
+          .select({ id: users.id, name: users.name, email: users.email, avatar: users.avatar })
+          .from(users)
+          .where(eq(users.id, person.submittedBy))
+          .limit(1);
+        
         return {
           ...person,
           votes,
           approvalStatus,
           userVote: userVote ? { id: userVote.id, voteType: userVote.voteType } : null,
+          submitter: submitter[0] || null,
         };
       })
     );
@@ -47,15 +57,24 @@ export async function GET(request: NextRequest) {
     const resourcesWithVotes = await Promise.all(
       pendingResources.map(async (resource) => {
         const votes = await votesService.getVotesForSubmission(undefined, resource.id);
-        const approvalStatus = await votesService.checkApprovalStatus(undefined, resource.id);
+        const approvalStatus = await votesService.checkApprovalStatus(undefined, resource.id, undefined, 50, 3);
         const userVote = userId
           ? await votesService.getUserVote(userId, undefined, resource.id)
           : null;
+        
+        // Get submitter info
+        const submitter = await db
+          .select({ id: users.id, name: users.name, email: users.email, avatar: users.avatar })
+          .from(users)
+          .where(eq(users.id, resource.submittedBy))
+          .limit(1);
+        
         return {
           ...resource,
           votes,
           approvalStatus,
           userVote: userVote ? { id: userVote.id, voteType: userVote.voteType } : null,
+          submitter: submitter[0] || null,
         };
       })
     );
@@ -63,15 +82,24 @@ export async function GET(request: NextRequest) {
     const appsWithVotes = await Promise.all(
       pendingApps.map(async (app) => {
         const votes = await votesService.getVotesForSubmission(undefined, undefined, app.id);
-        const approvalStatus = await votesService.checkApprovalStatus(undefined, undefined, app.id);
+        const approvalStatus = await votesService.checkApprovalStatus(undefined, undefined, app.id, 50, 3);
         const userVote = userId
           ? await votesService.getUserVote(userId, undefined, undefined, app.id)
           : null;
+        
+        // Get submitter info
+        const submitter = await db
+          .select({ id: users.id, name: users.name, email: users.email, avatar: users.avatar })
+          .from(users)
+          .where(eq(users.id, app.submittedBy))
+          .limit(1);
+        
         return {
           ...app,
           votes,
           approvalStatus,
           userVote: userVote ? { id: userVote.id, voteType: userVote.voteType } : null,
+          submitter: submitter[0] || null,
         };
       })
     );
@@ -164,6 +192,9 @@ export async function GET(request: NextRequest) {
       console.error("Error fetching GitHub contributors:", error);
     }
 
+    // Check if current user is admin
+    const isAdmin = user ? isUserAdmin(user) : false;
+
     return success({
       pendingSubmissions: {
         people: peopleWithVotes,
@@ -172,6 +203,7 @@ export async function GET(request: NextRequest) {
       },
       dbContributors: contributorsWithTotals,
       githubContributors,
+      isAdmin,
     });
   } catch (err) {
     console.error("Error in contributors endpoint:", err);

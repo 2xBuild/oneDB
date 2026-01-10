@@ -361,6 +361,15 @@ export class ApiClient {
     return this.get<ContributorsData>("/db/contributors");
   }
 
+  // Admin endpoints
+  async adminApprove(type: "people" | "resource" | "app", id: string) {
+    return this.post<{ message: string; result: any }>("/db/contribution/admin/approve", { type, id });
+  }
+
+  async adminDelete(type: "people" | "resource" | "app", id: string) {
+    return this.post<{ message: string; result: any }>("/db/contribution/admin/delete", { type, id });
+  }
+
   // Auth endpoints
   async getCurrentUser() {
     return this.get<{ user: any }>("/auth/me");

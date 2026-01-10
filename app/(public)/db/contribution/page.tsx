@@ -5,7 +5,7 @@ import { apiClient } from "@/lib/api";
 import { Button } from "@/components/ui";
 import { useAuth } from "@/contexts/auth-context";
 import type { ContributorsData, PersonWithVotes, ResourceWithVotes, AppWithVotes } from "@/lib/types";
-import { ThumbsUp, ThumbsDown, CheckCircle2, ExternalLink } from "lucide-react";
+import { ThumbsUp, ThumbsDown, CheckCircle2, ExternalLink, Trash2, Shield, User } from "lucide-react";
 
 export default function ContributorsPage() {
   const { isAuthenticated } = useAuth();
@@ -23,6 +23,10 @@ export default function ContributorsPage() {
     try {
       const res = await apiClient.getContributorsData();
       setContributorsData(res.data || null);
+      // Debug: log admin status
+      if (res.data?.isAdmin) {
+        console.log("User is admin");
+      }
     } catch (error) {
       console.error("Error fetching contributors data:", error);
     } finally {
@@ -55,6 +59,36 @@ export default function ContributorsPage() {
     }
   };
 
+  const handleAdminApprove = async (type: "people" | "resource" | "app", id: string) => {
+    if (!confirm(`Are you sure you want to approve this ${type}?`)) {
+      return;
+    }
+
+    try {
+      await apiClient.adminApprove(type, id);
+      fetchContributorsData();
+    } catch (error: any) {
+      console.error("Error approving:", error);
+      alert(error?.response?.data?.error || "Failed to approve. Please try again.");
+    }
+  };
+
+  const handleAdminDelete = async (type: "people" | "resource" | "app", id: string) => {
+    if (!confirm(`Are you sure you want to delete this ${type}? This action cannot be undone.`)) {
+      return;
+    }
+
+    try {
+      await apiClient.adminDelete(type, id);
+      fetchContributorsData();
+    } catch (error: any) {
+      console.error("Error deleting:", error);
+      alert(error?.response?.data?.error || "Failed to delete. Please try again.");
+    }
+  };
+
+  const isAdmin = contributorsData?.isAdmin === true;
+
   if (loading) {
     return (
       <div className="container mx-auto px-4 py-8" role="status" aria-live="polite">
@@ -77,11 +111,21 @@ export default function ContributorsPage() {
     const approvalStatus = item.approvalStatus;
     if (!approvalStatus) return null;
 
-    const threshold = approvalStatus.threshold || 10;
-    const percentageThreshold = approvalStatus.percentageThreshold || 70;
     const upvotes = approvalStatus.upvotes || 0;
-    const votesNeeded = approvalStatus.votesNeeded ?? approvalStatus.votesNeededForThreshold ?? 0;
-    const progress = Math.min(100, (upvotes / threshold) * 100);
+    const downvotes = approvalStatus.downvotes || 0;
+    const total = approvalStatus.total || 0;
+    const ratioThreshold = approvalStatus.ratioThreshold || 3;
+    const minVotes = approvalStatus.minVotes || 50;
+    const votesNeeded = approvalStatus.votesNeeded ?? 0;
+    const meetsMinVotes = approvalStatus.meetsMinVotes ?? false;
+    const meetsRatio = approvalStatus.meetsRatio ?? false;
+    
+    // Calculate progress - show progress towards both requirements
+    const progressMinVotes = Math.min(100, (total / minVotes) * 100);
+    const requiredUpvotesForRatio = downvotes > 0 ? ratioThreshold * downvotes : minVotes;
+    const progressRatio = requiredUpvotesForRatio > 0 ? Math.min(100, (upvotes / requiredUpvotesForRatio) * 100) : 0;
+    // Overall progress is the minimum of both (both must be met)
+    const progress = Math.min(progressMinVotes, progressRatio);
 
     return (
       <div className="mt-3 space-y-2">
@@ -100,16 +144,29 @@ export default function ContributorsPage() {
             style={{ width: `${progress}%` }}
           />
         </div>
-        <div className="text-xs text-muted-foreground">
+        <div className="text-xs text-muted-foreground space-y-1">
           {approvalStatus.approved ? (
-            <span className="text-green-600">✓ Meets approval requirements</span>
+            <span className="text-green-600">✓ Meets approval requirements (50+ votes & 3x ratio)</span>
           ) : (
-            <span>
-              Needs {votesNeeded} more upvote{votesNeeded !== 1 ? "s" : ""} to reach {threshold} upvotes
-              {!approvalStatus.meetsPercentage && (
-                <span> or {percentageThreshold}% positive rating</span>
+            <div className="space-y-1">
+              {!meetsMinVotes && (
+                <div>
+                  <span className="font-medium">Minimum votes:</span> Needs {approvalStatus.votesNeededForMin || 0} more vote{(approvalStatus.votesNeededForMin || 0) !== 1 ? "s" : ""} to reach {minVotes} total ({total}/{minVotes})
+                </div>
               )}
-            </span>
+              {!meetsRatio && (
+                <div>
+                  <span className="font-medium">Healthy ratio:</span> {downvotes === 0 ? (
+                    <>Needs {approvalStatus.votesNeededForRatio || 0} more upvote{(approvalStatus.votesNeededForRatio || 0) !== 1 ? "s" : ""} (minimum {minVotes} upvotes)</>
+                  ) : (
+                    <>Needs {approvalStatus.votesNeededForRatio || 0} more upvote{(approvalStatus.votesNeededForRatio || 0) !== 1 ? "s" : ""} to reach {ratioThreshold}x ratio ({upvotes} up / {downvotes} down = {downvotes > 0 ? (upvotes / downvotes).toFixed(1) : 0}x, need {ratioThreshold}x)</>
+                  )}
+                </div>
+              )}
+              {meetsMinVotes && meetsRatio && (
+                <span className="text-green-600">✓ All requirements met!</span>
+              )}
+            </div>
           )}
         </div>
       </div>
@@ -121,9 +178,17 @@ export default function ContributorsPage() {
       {/* Section 1: Pending Submissions for Voting */}
       {allPending.length > 0 && (
         <section className="mb-12">
-          <h2 className="text-2xl font-bold mb-4">Pending Submissions for Voting</h2>
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="text-2xl font-bold">Pending Submissions for Voting</h2>
+            {isAdmin && (
+              <div className="flex items-center gap-2 px-3 py-1 bg-yellow-100 dark:bg-yellow-900/30 border border-yellow-400 dark:border-yellow-700 rounded-md">
+                <Shield className="h-4 w-4 text-yellow-700 dark:text-yellow-400" />
+                <span className="text-sm font-semibold text-yellow-700 dark:text-yellow-400">Admin Mode</span>
+              </div>
+            )}
+          </div>
           <p className="text-muted-foreground mb-6">
-            Review and vote on pending submissions. They need community approval before being added to the database.
+            Review and vote on pending submissions. They need <strong>minimum 50 votes</strong> and a <strong>healthy 3x upvote ratio</strong> (upvotes ≥ 3× downvotes) to be automatically approved, or admin approval.
           </p>
 
           <div className="space-y-8">
@@ -138,13 +203,66 @@ export default function ContributorsPage() {
                     const isDownvoted = userVote?.voteType === "downvote";
                     
                     return (
-                      <div key={person.id} className="border border-muted rounded-lg p-6">
-                        <h4 className="text-lg font-bold mb-2">{person.name}</h4>
-                        {person.description && (
-                          <p className="text-sm text-muted-foreground mb-4 line-clamp-2">
-                            {person.description}
-                          </p>
-                        )}
+                      <div key={person.id} className="border border-muted rounded-lg p-6 hover:border-primary/50 transition-colors">
+                        <div className="flex gap-4 mb-4">
+                          {person.image && (
+                            <img
+                              src={person.image}
+                              alt={person.name}
+                              className="w-20 h-20 rounded-lg object-cover flex-shrink-0"
+                              onError={(e) => {
+                                (e.target as HTMLImageElement).style.display = 'none';
+                              }}
+                            />
+                          )}
+                          <div className="flex-1 min-w-0">
+                            <h4 className="text-lg font-bold mb-1">{person.name}</h4>
+                            {person.submitter && (
+                              <div className="flex items-center gap-2 text-xs text-muted-foreground mb-2">
+                                <User className="h-3 w-3" />
+                                <span>Submitted by </span>
+                                {person.submitter.avatar && (
+                                  <img
+                                    src={person.submitter.avatar}
+                                    alt={person.submitter.name || "User"}
+                                    className="w-4 h-4 rounded-full"
+                                  />
+                                )}
+                                <span className="font-medium">{person.submitter.name || person.submitter.email}</span>
+                              </div>
+                            )}
+                            {person.description && (
+                              <p className="text-sm text-muted-foreground mb-3">
+                                {person.description}
+                              </p>
+                            )}
+                            <div className="flex flex-wrap gap-2 mb-2">
+                              <div className="text-xs px-2 py-1 bg-muted rounded">
+                                <strong>Platform:</strong> {person.socialMediaPlatform}
+                              </div>
+                              {person.followersCount && (
+                                <div className="text-xs px-2 py-1 bg-muted rounded">
+                                  <strong>Followers:</strong> {person.followersCount.toLocaleString()}
+                                </div>
+                              )}
+                              {person.tags && person.tags.length > 0 && (
+                                <div className="text-xs px-2 py-1 bg-muted rounded">
+                                  <strong>Tags:</strong> {person.tags.join(", ")}
+                                </div>
+                              )}
+                            </div>
+                            {person.socialMediaLink && (
+                              <a
+                                href={person.socialMediaLink}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="text-xs text-primary hover:underline flex items-center gap-1"
+                              >
+                                View Profile <ExternalLink className="h-3 w-3" />
+                              </a>
+                            )}
+                          </div>
+                        </div>
                         <div className="space-y-3">
                           <div className="flex items-center justify-between">
                             <div className="text-sm">
@@ -187,6 +305,28 @@ export default function ContributorsPage() {
                             </div>
                           </div>
                           {renderApprovalProgress(person)}
+                          {isAdmin && (
+                            <div className="flex gap-2 pt-2 border-t border-muted mt-3">
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                onClick={() => handleAdminApprove("people", person.id)}
+                                className="text-green-600 hover:bg-green-50 dark:hover:bg-green-950"
+                              >
+                                <Shield className="h-4 w-4 mr-1" />
+                                Approve (Admin)
+                              </Button>
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                onClick={() => handleAdminDelete("people", person.id)}
+                                className="text-red-600 hover:bg-red-50 dark:hover:bg-red-950"
+                              >
+                                <Trash2 className="h-4 w-4 mr-1" />
+                                Delete (Admin)
+                              </Button>
+                            </div>
+                          )}
                         </div>
                       </div>
                     );
@@ -206,13 +346,61 @@ export default function ContributorsPage() {
                     const isDownvoted = userVote?.voteType === "downvote";
                     
                     return (
-                      <div key={resource.id} className="border border-muted rounded-lg p-6">
-                        <h4 className="text-lg font-bold mb-2">{resource.title}</h4>
-                        {resource.description && (
-                          <p className="text-sm text-muted-foreground mb-4 line-clamp-2">
-                            {resource.description}
-                          </p>
-                        )}
+                      <div key={resource.id} className="border border-muted rounded-lg p-6 hover:border-primary/50 transition-colors">
+                        <div className="flex gap-4 mb-4">
+                          {resource.image && (
+                            <img
+                              src={resource.image}
+                              alt={resource.title}
+                              className="w-20 h-20 rounded-lg object-cover flex-shrink-0"
+                              onError={(e) => {
+                                (e.target as HTMLImageElement).style.display = 'none';
+                              }}
+                            />
+                          )}
+                          <div className="flex-1 min-w-0">
+                            <h4 className="text-lg font-bold mb-1">{resource.title}</h4>
+                            {resource.submitter && (
+                              <div className="flex items-center gap-2 text-xs text-muted-foreground mb-2">
+                                <User className="h-3 w-3" />
+                                <span>Submitted by </span>
+                                {resource.submitter.avatar && (
+                                  <img
+                                    src={resource.submitter.avatar}
+                                    alt={resource.submitter.name || "User"}
+                                    className="w-4 h-4 rounded-full"
+                                  />
+                                )}
+                                <span className="font-medium">{resource.submitter.name || resource.submitter.email}</span>
+                              </div>
+                            )}
+                            {resource.description && (
+                              <p className="text-sm text-muted-foreground mb-3">
+                                {resource.description}
+                              </p>
+                            )}
+                            <div className="flex flex-wrap gap-2 mb-2">
+                              <div className="text-xs px-2 py-1 bg-muted rounded">
+                                <strong>Category:</strong> {resource.category}
+                              </div>
+                              {resource.tags && resource.tags.length > 0 && (
+                                <div className="text-xs px-2 py-1 bg-muted rounded">
+                                  <strong>Tags:</strong> {resource.tags.join(", ")}
+                                </div>
+                              )}
+                            </div>
+                            {resource.url && (
+                              <a
+                                href={resource.url}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="text-xs text-primary hover:underline flex items-center gap-1"
+                              >
+                                Visit Resource <ExternalLink className="h-3 w-3" />
+                              </a>
+                            )}
+                          </div>
+                        </div>
                         <div className="space-y-3">
                           <div className="flex items-center justify-between">
                             <div className="text-sm">
@@ -255,6 +443,28 @@ export default function ContributorsPage() {
                             </div>
                           </div>
                           {renderApprovalProgress(resource)}
+                          {isAdmin && (
+                            <div className="flex gap-2 pt-2 border-t border-muted mt-3">
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                onClick={() => handleAdminApprove("resource", resource.id)}
+                                className="text-green-600 hover:bg-green-50 dark:hover:bg-green-950"
+                              >
+                                <Shield className="h-4 w-4 mr-1" />
+                                Approve (Admin)
+                              </Button>
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                onClick={() => handleAdminDelete("resource", resource.id)}
+                                className="text-red-600 hover:bg-red-50 dark:hover:bg-red-950"
+                              >
+                                <Trash2 className="h-4 w-4 mr-1" />
+                                Delete (Admin)
+                              </Button>
+                            </div>
+                          )}
                         </div>
                       </div>
                     );
@@ -274,13 +484,61 @@ export default function ContributorsPage() {
                     const isDownvoted = userVote?.voteType === "downvote";
                     
                     return (
-                      <div key={app.id} className="border border-muted rounded-lg p-6">
-                        <h4 className="text-lg font-bold mb-2">{app.name}</h4>
-                        {app.description && (
-                          <p className="text-sm text-muted-foreground mb-4 line-clamp-2">
-                            {app.description}
-                          </p>
-                        )}
+                      <div key={app.id} className="border border-muted rounded-lg p-6 hover:border-primary/50 transition-colors">
+                        <div className="flex gap-4 mb-4">
+                          {app.logo && (
+                            <img
+                              src={app.logo}
+                              alt={app.name}
+                              className="w-20 h-20 rounded-lg object-cover flex-shrink-0"
+                              onError={(e) => {
+                                (e.target as HTMLImageElement).style.display = 'none';
+                              }}
+                            />
+                          )}
+                          <div className="flex-1 min-w-0">
+                            <h4 className="text-lg font-bold mb-1">{app.name}</h4>
+                            {app.submitter && (
+                              <div className="flex items-center gap-2 text-xs text-muted-foreground mb-2">
+                                <User className="h-3 w-3" />
+                                <span>Submitted by </span>
+                                {app.submitter.avatar && (
+                                  <img
+                                    src={app.submitter.avatar}
+                                    alt={app.submitter.name || "User"}
+                                    className="w-4 h-4 rounded-full"
+                                  />
+                                )}
+                                <span className="font-medium">{app.submitter.name || app.submitter.email}</span>
+                              </div>
+                            )}
+                            {app.description && (
+                              <p className="text-sm text-muted-foreground mb-3">
+                                {app.description}
+                              </p>
+                            )}
+                            <div className="flex flex-wrap gap-2 mb-2">
+                              <div className="text-xs px-2 py-1 bg-muted rounded">
+                                <strong>Category:</strong> {app.category}
+                              </div>
+                              {app.tags && app.tags.length > 0 && (
+                                <div className="text-xs px-2 py-1 bg-muted rounded">
+                                  <strong>Tags:</strong> {app.tags.join(", ")}
+                                </div>
+                              )}
+                            </div>
+                            {app.url && (
+                              <a
+                                href={app.url}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="text-xs text-primary hover:underline flex items-center gap-1"
+                              >
+                                Visit App <ExternalLink className="h-3 w-3" />
+                              </a>
+                            )}
+                          </div>
+                        </div>
                         <div className="space-y-3">
                           <div className="flex items-center justify-between">
                             <div className="text-sm">
@@ -323,6 +581,28 @@ export default function ContributorsPage() {
                             </div>
                           </div>
                           {renderApprovalProgress(app)}
+                          {isAdmin && (
+                            <div className="flex gap-2 pt-2 border-t border-muted mt-3">
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                onClick={() => handleAdminApprove("app", app.id)}
+                                className="text-green-600 hover:bg-green-50 dark:hover:bg-green-950"
+                              >
+                                <Shield className="h-4 w-4 mr-1" />
+                                Approve (Admin)
+                              </Button>
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                onClick={() => handleAdminDelete("app", app.id)}
+                                className="text-red-600 hover:bg-red-50 dark:hover:bg-red-950"
+                              >
+                                <Trash2 className="h-4 w-4 mr-1" />
+                                Delete (Admin)
+                              </Button>
+                            </div>
+                          )}
                         </div>
                       </div>
                     );

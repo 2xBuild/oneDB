@@ -152,6 +152,21 @@ export class ResourcesService {
     return updated;
   }
 
+  async delete(id: string) {
+    // Soft delete
+    const [deleted] = await db
+      .update(resources)
+      .set({
+        deletedAt: new Date(),
+        updatedAt: new Date(),
+        status: "rejected",
+      })
+      .where(eq(resources.id, id))
+      .returning();
+
+    return deleted;
+  }
+
   async getUniqueCategories() {
     const results = await db
       .select({ category: resources.category })

@@ -145,48 +145,60 @@ export class VotesService {
     peopleId?: string,
     resourceId?: string,
     appId?: string,
-    threshold = 10,
-    percentageThreshold = 70
+    minVotes = 50, // Minimum 50 total votes required
+    ratioThreshold = 3 // Upvotes must be at least 3x downvotes
   ) {
     const voteStats = await this.getVotesForSubmission(peopleId, resourceId, appId);
 
-    const meetsThreshold = voteStats.upvotes >= threshold;
-    const meetsPercentage = voteStats.percentage || 0 >= percentageThreshold;
-    const approved = meetsThreshold || meetsPercentage;
+    // Check both requirements:
+    // 1. Minimum 50 total votes (upvotes + downvotes >= 50)
+    // 2. 3x ratio: upvotes >= 3 * downvotes
+    const meetsMinVotes = voteStats.total >= minVotes;
+    const meetsRatio = voteStats.downvotes === 0 
+      ? voteStats.upvotes >= minVotes // If no downvotes, need minimum upvotes
+      : voteStats.upvotes >= ratioThreshold * voteStats.downvotes;
+    
+    const approved = meetsMinVotes && meetsRatio;
 
     // Calculate how many more votes needed
-    const votesNeededForThreshold = Math.max(0, threshold - voteStats.upvotes);
+    let votesNeededForMin = 0;
+    let votesNeededForRatio = 0;
     
-    // Calculate how many more upvotes needed to reach percentage threshold
-    // If we have x upvotes and y total votes, we need: (x + needed) / (total + needed) >= 0.70
-    // Solving: x + needed >= 0.70 * (total + needed)
-    // x + needed >= 0.70 * total + 0.70 * needed
-    // x - 0.70 * total >= -0.30 * needed
-    // needed >= (0.70 * total - x) / 0.30
-    const currentPercentage = voteStats.percentage || 0;
-    let votesNeededForPercentage = 0;
-    if (currentPercentage < percentageThreshold && voteStats.total > 0) {
-      // We need to calculate: if we add 'n' upvotes, what's the new percentage?
-      // (upvotes + n) / (total + n) >= percentageThreshold / 100
-      // This is a bit complex, so we'll use a simpler approach
-      // We need: (upvotes + n) / (total + n) >= 0.70
-      // For simplicity, we'll calculate based on current stats
-      const neededUpvotes = Math.ceil(
-        (percentageThreshold / 100) * voteStats.total - voteStats.upvotes
-      );
-      votesNeededForPercentage = Math.max(0, neededUpvotes);
+    if (!meetsMinVotes) {
+      votesNeededForMin = minVotes - voteStats.total;
     }
+    
+    if (!meetsRatio) {
+      if (voteStats.downvotes === 0) {
+        // Need minimum upvotes
+        votesNeededForRatio = Math.max(0, minVotes - voteStats.upvotes);
+      } else {
+        // Need upvotes to be 3x downvotes
+        const requiredUpvotes = ratioThreshold * voteStats.downvotes;
+        votesNeededForRatio = Math.max(0, requiredUpvotes - voteStats.upvotes);
+      }
+    }
+    
+    // Total votes needed is the maximum of both requirements
+    const votesNeeded = Math.max(votesNeededForMin, votesNeededForRatio);
 
     return {
       approved,
       ...voteStats,
-      threshold,
-      percentageThreshold,
-      votesNeededForThreshold,
-      votesNeededForPercentage,
-      votesNeeded: Math.min(votesNeededForThreshold, votesNeededForPercentage || Infinity),
-      meetsThreshold,
-      meetsPercentage,
+      minVotes,
+      ratioThreshold,
+      votesNeededForMin,
+      votesNeededForRatio,
+      votesNeeded,
+      meetsMinVotes,
+      meetsRatio,
+      // Keep old fields for backward compatibility
+      threshold: minVotes,
+      percentageThreshold: 75, // Approximate for 3:1 ratio
+      votesNeededForThreshold: votesNeeded,
+      votesNeededForPercentage: votesNeeded,
+      meetsThreshold: approved,
+      meetsPercentage: approved,
     };
   }
 

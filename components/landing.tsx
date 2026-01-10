@@ -8,6 +8,7 @@ import {
   Vote,
 } from "lucide-react";
 import OneDBVisualization from "./onedb-visualization";
+import FAQ from "./faq";
 
 export default function LandingPage() {
   return (
@@ -101,6 +102,8 @@ export default function LandingPage() {
         </div>
       </section>
 
+      {/* FAQ Section */}
+      <FAQ />
     </div>
   );
 }

@@ -20,14 +20,16 @@ export async function POST(request: NextRequest) {
 
     const vote = await votesService.vote(user.id, validated);
 
-    // Check if submission should be approved
+    // Check if submission should be approved (50 votes minimum + 3x upvote ratio)
     const approvalStatus = await votesService.checkApprovalStatus(
       validated.peopleId,
       validated.resourceId,
-      validated.appId
+      validated.appId,
+      50, // Minimum 50 votes
+      3   // Upvotes must be 3x downvotes
     );
 
-    // Auto-approve if threshold met
+    // Auto-approve if threshold met (50 votes OR admin approval - admin approval handled separately)
     if (approvalStatus.approved) {
       if (validated.peopleId) {
         await peopleService.approve(validated.peopleId);

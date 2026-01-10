@@ -157,6 +157,21 @@ export class PeopleService {
     return updated;
   }
 
+  async delete(id: string) {
+    // Soft delete
+    const [deleted] = await db
+      .update(people)
+      .set({
+        deletedAt: new Date(),
+        updatedAt: new Date(),
+        status: "rejected",
+      })
+      .where(eq(people.id, id))
+      .returning();
+
+    return deleted;
+  }
+
   async getUniquePlatforms() {
     const results = await db
       .select({ platform: people.socialMediaPlatform })

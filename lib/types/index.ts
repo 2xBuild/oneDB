@@ -294,6 +294,14 @@ export interface ApprovalStatus {
   downvotes: number;
   total: number;
   percentage: number;
+  // New 3x ratio fields
+  minVotes?: number;
+  ratioThreshold?: number;
+  votesNeededForMin?: number;
+  votesNeededForRatio?: number;
+  meetsMinVotes?: boolean;
+  meetsRatio?: boolean;
+  // Legacy fields for backward compatibility
   threshold: number;
   percentageThreshold: number;
   votesNeededForThreshold: number;
@@ -315,6 +323,12 @@ export interface PersonWithVotes extends Person {
     id: string;
     voteType: "upvote" | "downvote";
   } | null;
+  submitter: {
+    id: string;
+    name: string | null;
+    email: string;
+    avatar: string | null;
+  } | null;
 }
 
 export interface ResourceWithVotes extends Resource {
@@ -329,6 +343,12 @@ export interface ResourceWithVotes extends Resource {
     id: string;
     voteType: "upvote" | "downvote";
   } | null;
+  submitter: {
+    id: string;
+    name: string | null;
+    email: string;
+    avatar: string | null;
+  } | null;
 }
 
 export interface AppWithVotes extends App {
@@ -342,6 +362,12 @@ export interface AppWithVotes extends App {
   userVote: {
     id: string;
     voteType: "upvote" | "downvote";
+  } | null;
+  submitter: {
+    id: string;
+    name: string | null;
+    email: string;
+    avatar: string | null;
   } | null;
 }
 
@@ -378,5 +404,6 @@ export interface ContributorsData {
   };
   dbContributors: DbContributor[];
   githubContributors: GitHubContributor[];
+  isAdmin?: boolean;
 }
 
