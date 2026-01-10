@@ -1,12 +1,13 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import { apiClient } from "@/lib/api";
 import type { App, LikeAggregation } from "@/lib/types";
 import { Input, LikeDislike } from "@/components/ui";
 import Image from "next/image";
 import { ExternalLink, Globe, ChevronDown } from "lucide-react";
 import { useAuth } from "@/contexts/auth-context";
+import DBSortSelector, { type AppsResourcesSortType } from "../components/DBSortSelector";
 
 interface AppWithLikes extends App {
   likes?: LikeAggregation;
@@ -19,6 +20,7 @@ export default function AppsPage() {
   const [categoryFilter, setCategoryFilter] = useState<string>("");
   const [tagFilter, setTagFilter] = useState<string>("");
   const [searchQuery, setSearchQuery] = useState<string>("");
+  const [sortBy, setSortBy] = useState<AppsResourcesSortType>('likes');
   const { isAuthenticated, user } = useAuth();
 
   useEffect(() => {
@@ -87,6 +89,51 @@ export default function AppsPage() {
     );
   });
 
+  // Sorting helpers
+  const sortByLikes = (a: AppWithLikes, b: AppWithLikes) => {
+    const aLikes = a.likes?.likes || 0;
+    const aDislikes = a.likes?.dislikes || 0;
+    const aNetLikes = aLikes - aDislikes;
+    
+    const bLikes = b.likes?.likes || 0;
+    const bDislikes = b.likes?.dislikes || 0;
+    const bNetLikes = bLikes - bDislikes;
+    
+    // Sorting by net likes (likes - dislikes), then total likes, then time
+    if (bNetLikes !== aNetLikes) {
+      return bNetLikes - aNetLikes;
+    }
+    if (bLikes !== aLikes) {
+      return bLikes - aLikes;
+    }
+    return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+  };
+
+  const sortByFirstAdded = (a: AppWithLikes, b: AppWithLikes) => {
+    // Sorting by oldest first
+    return new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime();
+  };
+
+  const sortByLastAdded = (a: AppWithLikes, b: AppWithLikes) => {
+    // Sorting by newest first
+    return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+  };
+
+  // Applying sorting based on selected sort type
+  const sortedApps = useMemo(() => {
+    const sorted = [...filteredApps];
+    switch (sortBy) {
+      case 'likes':
+        return sorted.sort(sortByLikes);
+      case 'first-added':
+        return sorted.sort(sortByFirstAdded);
+      case 'last-added':
+        return sorted.sort(sortByLastAdded);
+      default:
+        return sorted;
+    }
+  }, [filteredApps, sortBy]);
+
   const categories = Array.from(new Set(apps.map((a) => a.category)));
 
   if (loading) {
@@ -106,7 +153,7 @@ export default function AppsPage() {
 
       {/* Filters */}
       <div className="space-y-4 mb-8">
-        <div className="flex flex-col sm:flex-row gap-4">
+        <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center">
           <Input
             placeholder="Search apps..."
             value={searchQuery}
@@ -138,8 +185,7 @@ export default function AppsPage() {
             </select>
             <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 pointer-events-none text-muted-foreground" />
           </div>
-
-
+          <DBSortSelector sortBy={sortBy} onSortChange={setSortBy} type="apps" />
         </div>
         {tagFilter && (
           <div className="flex items-center gap-2">
@@ -163,13 +209,13 @@ export default function AppsPage() {
       </div>
 
       {/* Apps List*/}
-      {filteredApps.length === 0 ? (
+      {sortedApps.length === 0 ? (
         <div className="text-center py-12" role="status">
           <p className="text-muted-foreground">No apps found.</p>
         </div>
       ) : (
         <div className="space-y-4">
-          {filteredApps.map((app) => {
+          {sortedApps.map((app) => {
             const handleLikeChange = async (isLike: boolean) => {
               if (!isAuthenticated) return;
               

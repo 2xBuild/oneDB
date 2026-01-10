@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback, useMemo } from "react";
 import { apiClient } from "@/lib/api";
 import type { Person, LikeAggregation } from "@/lib/types";
 import { Input, LikeDislike } from "@/components/ui";
@@ -8,6 +8,7 @@ import Image from "next/image";
 import { Twitter, Linkedin, Youtube, Instagram, Github, Globe, ExternalLink } from "lucide-react";
 import { useAuth } from "@/contexts/auth-context";
 import { formatFollowerCount, getFollowerLabel, capitalizeFirst, getPlatformDisplayName, normalizePlatformName } from "@/lib/format-utils";
+import DBSortSelector, { type PeopleSortType } from "../components/DBSortSelector";
 
 const platformIcons: Record<string, any> = {
   twitter: Twitter,
@@ -34,6 +35,7 @@ export default function PeoplePage() {
   const [platformFilter, setPlatformFilter] = useState<string>("");
   const [tagFilter, setTagFilter] = useState<string>("");
   const [searchQuery, setSearchQuery] = useState<string>("");
+  const [sortBy, setSortBy] = useState<PeopleSortType>('likes');
   const { isAuthenticated, user } = useAuth();
 
   useEffect(() => {
@@ -103,6 +105,64 @@ export default function PeoplePage() {
     );
   });
 
+  // Sorting helpers
+  const sortByLikes = (a: PersonWithLikes, b: PersonWithLikes) => {
+    const aLikes = a.likes?.likes || 0;
+    const aDislikes = a.likes?.dislikes || 0;
+    const aNetLikes = aLikes - aDislikes;
+    
+    const bLikes = b.likes?.likes || 0;
+    const bDislikes = b.likes?.dislikes || 0;
+    const bNetLikes = bLikes - bDislikes;
+    
+    // Sorting by net likes (likes - dislikes), then total likes, then time
+    if (bNetLikes !== aNetLikes) {
+      return bNetLikes - aNetLikes;
+    }
+    if (bLikes !== aLikes) {
+      return bLikes - aLikes;
+    }
+    return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+  };
+
+  const sortByFollowers = (a: PersonWithLikes, b: PersonWithLikes) => {
+    const aFollowers = a.followersCount ?? 0;
+    const bFollowers = b.followersCount ?? 0;
+    
+    // Sorting by followers count (descending), then likes, then time
+    if (bFollowers !== aFollowers) {
+      return bFollowers - aFollowers;
+    }
+    return sortByLikes(a, b);
+  };
+
+  const sortByFirstAdded = (a: PersonWithLikes, b: PersonWithLikes) => {
+    // Sorting by oldest first
+    return new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime();
+  };
+
+  const sortByLastAdded = (a: PersonWithLikes, b: PersonWithLikes) => {
+    // Sorting by newest first
+    return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+  };
+
+  // Applying sorting based on selected sort type
+  const sortedPeople = useMemo(() => {
+    const sorted = [...filteredPeople];
+    switch (sortBy) {
+      case 'likes':
+        return sorted.sort(sortByLikes);
+      case 'followers':
+        return sorted.sort(sortByFollowers);
+      case 'first-added':
+        return sorted.sort(sortByFirstAdded);
+      case 'last-added':
+        return sorted.sort(sortByLastAdded);
+      default:
+        return sorted;
+    }
+  }, [filteredPeople, sortBy]);
+
   const platforms = Array.from(new Set(people.map((p) => p.socialMediaPlatform))).sort();
 
   if (loading) {
@@ -122,12 +182,15 @@ export default function PeoplePage() {
 
       {/* Search and Active Filters */}
       <div className="mb-6 space-y-4">
-        <Input
-          placeholder="Search people..."
-          value={searchQuery}
-          onChange={(e) => setSearchQuery(e.target.value)}
-          className="max-w-md"
-        />
+        <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center">
+          <Input
+            placeholder="Search people..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="max-w-md"
+          />
+          <DBSortSelector sortBy={sortBy} onSortChange={setSortBy} type="people" />
+        </div>
         {tagFilter && (
           <div className="flex items-center gap-2">
             <span className="text-sm text-muted-foreground">Active tag filter:</span>
@@ -195,13 +258,13 @@ export default function PeoplePage() {
       </div>
 
       {/* People list */}
-      {filteredPeople.length === 0 ? (
+      {sortedPeople.length === 0 ? (
         <div className="text-center py-12" role="status">
           <p className="text-muted-foreground">No people found.</p>
         </div>
       ) : (
         <div className="space-y-4">
-          {filteredPeople.map((person) => {
+          {sortedPeople.map((person) => {
             const PlatformIcon = getPlatformIcon(person.socialMediaPlatform);
             const followerLabel = getFollowerLabel(person.socialMediaPlatform);
             const platformDisplayName = getPlatformDisplayName(person.socialMediaPlatform);
