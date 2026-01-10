@@ -326,10 +326,10 @@ export default function PeoplePage() {
                 key={person.id}
                 className="border border-muted rounded-lg px-4 py-3 hover:shadow-md transition-shadow bg-card"
               >
-                <div className="flex items-center gap-4">
+                <div className="flex items-center gap-2 sm:gap-4">
                   {/* Logo/DP */}
                   {person.image ? (
-                    <div className="relative w-12 h-12 rounded-full overflow-hidden flex-shrink-0">
+                    <div className="relative w-10 h-10 sm:w-12 sm:h-12 rounded-full overflow-hidden flex-shrink-0">
                       <Image
                         src={person.image}
                         alt={person.name}
@@ -338,27 +338,27 @@ export default function PeoplePage() {
                       />
                     </div>
                   ) : (
-                    <div className="w-12 h-12 rounded-full bg-muted flex items-center justify-center flex-shrink-0">
-                      <PlatformIcon className="w-6 h-6 text-muted-foreground" />
+                    <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-muted flex items-center justify-center flex-shrink-0">
+                      <PlatformIcon className="w-5 h-5 sm:w-6 sm:h-6 text-muted-foreground" />
                     </div>
                   )}
 
                   {/* Name and Description */}
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2 mb-1">
-                      <PlatformIcon className="w-4 h-4 text-muted-foreground flex-shrink-0" />
-                      <h3 className="text-base font-semibold truncate">{person.name}</h3>
-                      <span className="text-xs text-muted-foreground">({platformDisplayName})</span>
+                  <div className="flex-1 min-w-0 pr-2">
+                    <div className="flex items-center gap-1.5 sm:gap-2 mb-0.5 sm:mb-1 flex-wrap">
+                      <PlatformIcon className="w-3 h-3 sm:w-4 sm:h-4 text-muted-foreground flex-shrink-0" />
+                      <h3 className="text-sm sm:text-base font-semibold truncate">{person.name}</h3>
+                      <span className="text-xs text-muted-foreground hidden sm:inline">({platformDisplayName})</span>
                     </div>
                     {person.description && (
-                      <p className="text-sm text-muted-foreground line-clamp-1 truncate">
+                      <p className="text-xs sm:text-sm text-muted-foreground line-clamp-1 truncate">
                         {person.description}
                       </p>
                     )}
                   </div>
 
-                  {/* Like/Dislike Buttons */}
-                  <div className="flex-shrink-0">
+                  {/* Combined Like/Dislike and Follow Button */}
+                  <div className="flex-shrink-0 flex items-center gap-1 sm:gap-2">
                     <LikeDislike
                       isLike={person.userLike ?? null}
                       likesCount={person.likes?.likes || 0}
@@ -369,18 +369,14 @@ export default function PeoplePage() {
                       size="sm"
                       showCounts={true}
                     />
-                  </div>
-
-                  {/* Follow Button */}
-                  <div className="flex-shrink-0">
                     <a
                       href={person.socialMediaLink}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="px-4 py-2 bg-primary text-primary-foreground rounded-full hover:bg-primary/90 transition-colors text-sm font-medium flex items-center gap-2"
+                      className="px-2 py-1.5 sm:px-4 sm:py-2 bg-primary text-primary-foreground rounded-full hover:bg-primary/90 transition-colors text-xs sm:text-sm font-medium flex items-center gap-1 sm:gap-2"
                     >
-                      Follow
-                      <ExternalLink className="w-3 h-3" />
+                      <span className="hidden sm:inline">Follow</span>
+                      <ExternalLink className="w-3 h-3 sm:w-3 sm:h-3" />
                     </a>
                   </div>
                 </div>

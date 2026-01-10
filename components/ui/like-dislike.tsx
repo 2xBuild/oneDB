@@ -45,81 +45,98 @@ export function LikeDislike({
     }
   };
 
-  const sizeClass = size === "sm" ? "h-4 w-4" : size === "md" ? "h-5 w-5" : "h-6 w-6";
+  const getSizeClasses = () => {
+    if (size === "sm") {
+      return {
+        mobile: "h-3 w-3",
+        desktop: "sm:h-4 sm:w-4",
+      };
+    } else if (size === "md") {
+      return {
+        mobile: "h-3.5 w-3.5",
+        desktop: "sm:h-5 sm:w-5",
+      };
+    } else {
+      return {
+        mobile: "h-4 w-4",
+        desktop: "sm:h-6 sm:w-6",
+      };
+    }
+  };
+
+  const iconSizeClasses = getSizeClasses();
 
   return (
-    <div className="flex flex-col gap-2">
-      <div className="flex items-center justify-center gap-3">
-        {/* Like Button */}
-        <button
-          type="button"
-          onClick={handleLikeClick}
-          disabled={disabled}
+    <div className="flex items-center gap-1 sm:gap-2">
+      {/* Like Button */}
+      <button
+        type="button"
+        onClick={handleLikeClick}
+        disabled={disabled}
+        className={cn(
+          "relative transition-all flex items-center justify-center gap-1 sm:gap-2 px-1.5 py-1 sm:px-3 sm:py-2 rounded-md",
+          !disabled && "hover:bg-muted cursor-pointer",
+          disabled && "cursor-not-allowed opacity-50",
+          isLike === true && "bg-green-500/20"
+        )}
+        aria-label="Like"
+      >
+        <ThumbsUp
           className={cn(
-            "relative transition-all flex items-center justify-center gap-2 px-3 py-2 rounded-md",
-            !disabled && "hover:bg-muted cursor-pointer",
-            disabled && "cursor-not-allowed opacity-50",
-            isLike === true && "bg-green-500/20"
+            iconSizeClasses.mobile,
+            iconSizeClasses.desktop,
+            isLike === true
+              ? "fill-green-500 text-green-500"
+              : "text-muted-foreground hover:text-green-500"
           )}
-          aria-label="Like"
-        >
-          <ThumbsUp
+          strokeWidth={2}
+        />
+        {showCounts && (
+          <span
             className={cn(
-              sizeClass,
-              isLike === true
-                ? "fill-green-500 text-green-500"
-                : "text-muted-foreground hover:text-green-500"
+              "text-xs sm:text-sm font-medium",
+              isLike === true ? "text-green-500" : "text-muted-foreground"
             )}
-            strokeWidth={2}
-          />
-          {showCounts && (
-            <span
-              className={cn(
-                "text-sm font-medium",
-                isLike === true ? "text-green-500" : "text-muted-foreground"
-              )}
-            >
-              {String(likesCount || 0)}
-            </span>
-          )}
-        </button>
+          >
+            {String(likesCount || 0)}
+          </span>
+        )}
+      </button>
 
-        {/* Dislike Button */}
-        <button
-          type="button"
-          onClick={handleDislikeClick}
-          disabled={disabled}
+      {/* Dislike Button */}
+      <button
+        type="button"
+        onClick={handleDislikeClick}
+        disabled={disabled}
+        className={cn(
+          "relative transition-all flex items-center justify-center gap-1 sm:gap-2 px-1.5 py-1 sm:px-3 sm:py-2 rounded-md",
+          !disabled && "hover:bg-muted cursor-pointer",
+          disabled && "cursor-not-allowed opacity-50",
+          isLike === false && "bg-red-500/20"
+        )}
+        aria-label="Dislike"
+      >
+        <ThumbsDown
           className={cn(
-            "relative transition-all flex items-center justify-center gap-2 px-3 py-2 rounded-md",
-            !disabled && "hover:bg-muted cursor-pointer",
-            disabled && "cursor-not-allowed opacity-50",
-            isLike === false && "bg-red-500/20"
+            iconSizeClasses.mobile,
+            iconSizeClasses.desktop,
+            isLike === false
+              ? "fill-red-500 text-red-500"
+              : "text-muted-foreground hover:text-red-500"
           )}
-          aria-label="Dislike"
-        >
-          <ThumbsDown
+          strokeWidth={2}
+        />
+        {showCounts && (
+          <span
             className={cn(
-              sizeClass,
-              isLike === false
-                ? "fill-red-500 text-red-500"
-                : "text-muted-foreground hover:text-red-500"
+              "text-xs sm:text-sm font-medium",
+              isLike === false ? "text-red-500" : "text-muted-foreground"
             )}
-            strokeWidth={2}
-          />
-          {showCounts && (
-            <span
-              className={cn(
-                "text-sm font-medium",
-                isLike === false ? "text-red-500" : "text-muted-foreground"
-              )}
-            >
-              {String(dislikesCount || 0)}
-            </span>
-          )}
-        </button>
-      </div>
-
-      
+          >
+            {String(dislikesCount || 0)}
+          </span>
+        )}
+      </button>
     </div>
   );
 }
