@@ -177,10 +177,10 @@ export default function AppsPage() {
               const previousLike = app.userLike;
               const previousLikes = app.likes;
               
-              // Computing optimistic counts
-              let optimisticLikes = previousLikes?.likes || 0;
-              let optimisticDislikes = previousLikes?.dislikes || 0;
-              let optimisticTotal = previousLikes?.total || 0;
+              // Computing optimistic counts (ensuring numbers)
+              let optimisticLikes = Number(previousLikes?.likes || 0);
+              let optimisticDislikes = Number(previousLikes?.dislikes || 0);
+              let optimisticTotal = Number(previousLikes?.total || 0);
               
               // Clicking same button removes the like/dislike
               if ((isLike && previousLike === true) || (!isLike && previousLike === false)) {
