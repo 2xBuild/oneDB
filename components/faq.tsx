@@ -51,8 +51,8 @@ export default function FAQ() {
       <div className="container mx-auto max-w-4xl">
         <div className="text-center mb-12">
           <div className="flex items-center justify-center gap-3 mb-4">
-            <HelpCircle className="h-6 w-6 text-primary" />
-            <h2 className="text-3xl font-bold">Frequently Asked Questions</h2>
+        
+            <h2 className="text-3xl font-bold">FAQ</h2>
           </div>
           <p className="text-muted-foreground">
             Everything you need to know about oneDB
