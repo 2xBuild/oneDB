@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState, useCallback, useMemo } from "react";
+import { useRouter } from "next/navigation";
 import { apiClient } from "@/lib/api";
 import type { Person, LikeAggregation } from "@/lib/types";
 import { Input, LikeEdit, Dialog, DialogContent, DialogHeader, DialogTitle, Button } from "@/components/ui";
@@ -9,7 +10,6 @@ import { Twitter, Linkedin, Youtube, Instagram, Github, Globe, ExternalLink, Tra
 import { useAuth } from "@/contexts/auth-context";
 import { formatFollowerCount, getFollowerLabel, capitalizeFirst, getPlatformDisplayName, normalizePlatformName } from "@/lib/format-utils";
 import DBSortSelector, { type PeopleSortType } from "../components/DBSortSelector";
-import PeopleSubmissionForm from "@/app/(public)/submit/components/PeopleSubmissionForm";
 
 const platformIcons: Record<string, any> = {
   twitter: Twitter,
@@ -37,10 +37,9 @@ export default function PeoplePage() {
   const [tagFilter, setTagFilter] = useState<string>("");
   const [searchQuery, setSearchQuery] = useState<string>("");
   const [sortBy, setSortBy] = useState<PeopleSortType>('likes');
-  const [editingPerson, setEditingPerson] = useState<PersonWithLikes | null>(null);
-  const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [deletingPerson, setDeletingPerson] = useState<PersonWithLikes | null>(null);
+  const router = useRouter();
   const { isAuthenticated, user } = useAuth();
 
   useEffect(() => {
@@ -433,8 +432,7 @@ export default function PeoplePage() {
                       totalCount={person.likes?.total || 0}
                       onChange={handleLikeChange}
                       onEdit={() => {
-                        setEditingPerson(person);
-                        setEditDialogOpen(true);
+                        router.push(`/db/people/${person.id}/edit`);
                       }}
                       onDelete={() => {
                         setDeletingPerson(person);
@@ -506,42 +504,6 @@ export default function PeoplePage() {
           })}
         </div>
       )}
-
-      {/* Edit Dialog */}
-      <Dialog open={editDialogOpen} onOpenChange={setEditDialogOpen}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Edit Person - Submit for Review</DialogTitle>
-          </DialogHeader>
-          {editingPerson && (
-            <PeopleSubmissionForm
-              onSuccess={() => {
-                setEditDialogOpen(false);
-                setEditingPerson(null);
-                alert("Edit request submitted. It will be reviewed by the community.");
-                fetchPeople();
-              }}
-              onCancel={() => {
-                setEditDialogOpen(false);
-                setEditingPerson(null);
-              }}
-              initialData={{
-                name: editingPerson.name,
-                description: editingPerson.description || "",
-                socialMediaPlatform: editingPerson.socialMediaPlatform,
-                socialMediaLink: editingPerson.socialMediaLink,
-                image: editingPerson.image || "",
-                tags: editingPerson.tags?.join(", ") || "",
-                followersCount: editingPerson.followersCount?.toString() || "",
-              }}
-              onSubmit={async (data) => {
-                await apiClient.submitPersonEdit(editingPerson.id, data);
-              }}
-              isEdit={true}
-            />
-          )}
-        </DialogContent>
-      </Dialog>
 
       {/* Delete Dialog */}
       <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>

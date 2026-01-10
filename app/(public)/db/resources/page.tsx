@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState, useMemo } from "react";
+import { useRouter } from "next/navigation";
 import { apiClient } from "@/lib/api";
 import type { Resource, LikeAggregation } from "@/lib/types";
 import { Input, LikeEdit, Dialog, DialogContent, DialogHeader, DialogTitle, Button } from "@/components/ui";
@@ -8,7 +9,6 @@ import Image from "next/image";
 import { ExternalLink, Globe, ChevronDown, Trash2 } from "lucide-react";
 import { useAuth } from "@/contexts/auth-context";
 import DBSortSelector, { type AppsResourcesSortType } from "../components/DBSortSelector";
-import ResourceSubmissionForm from "@/app/(public)/submit/components/ResourceSubmissionForm";
 
 interface ResourceWithLikes extends Resource {
   likes?: LikeAggregation;
@@ -22,10 +22,9 @@ export default function ResourcesPage() {
   const [tagFilter, setTagFilter] = useState<string>("");
   const [searchQuery, setSearchQuery] = useState<string>("");
   const [sortBy, setSortBy] = useState<AppsResourcesSortType>('likes');
-  const [editingResource, setEditingResource] = useState<ResourceWithLikes | null>(null);
-  const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [deletingResource, setDeletingResource] = useState<ResourceWithLikes | null>(null);
+  const router = useRouter();
   const { isAuthenticated, user } = useAuth();
 
   useEffect(() => {
@@ -378,8 +377,7 @@ export default function ResourcesPage() {
                       totalCount={resource.likes?.total || 0}
                       onChange={handleLikeChange}
                       onEdit={() => {
-                        setEditingResource(resource);
-                        setEditDialogOpen(true);
+                        router.push(`/db/resources/${resource.id}/edit`);
                       }}
                       onDelete={() => {
                         setDeletingResource(resource);
@@ -431,41 +429,6 @@ export default function ResourcesPage() {
           })}
         </div>
       )}
-
-      {/* Edit Dialog */}
-      <Dialog open={editDialogOpen} onOpenChange={setEditDialogOpen}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Edit Resource - Submit for Review</DialogTitle>
-          </DialogHeader>
-          {editingResource && (
-            <ResourceSubmissionForm
-              onSuccess={() => {
-                setEditDialogOpen(false);
-                setEditingResource(null);
-                alert("Edit request submitted. It will be reviewed by the community.");
-                fetchResources();
-              }}
-              onCancel={() => {
-                setEditDialogOpen(false);
-                setEditingResource(null);
-              }}
-              initialData={{
-                title: editingResource.title,
-                description: editingResource.description || "",
-                url: editingResource.url,
-                category: editingResource.category,
-                image: editingResource.image || "",
-                tags: editingResource.tags?.join(", ") || "",
-              }}
-              onSubmit={async (data) => {
-                await apiClient.submitResourceEdit(editingResource.id, data);
-              }}
-              isEdit={true}
-            />
-          )}
-        </DialogContent>
-      </Dialog>
 
       {/* Delete Dialog */}
       <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>

@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState, useMemo } from "react";
+import { useRouter } from "next/navigation";
 import { apiClient } from "@/lib/api";
 import type { App, LikeAggregation } from "@/lib/types";
 import { Input, LikeEdit, Dialog, DialogContent, DialogHeader, DialogTitle, Button } from "@/components/ui";
@@ -8,7 +9,6 @@ import Image from "next/image";
 import { ExternalLink, Globe, ChevronDown, Trash2 } from "lucide-react";
 import { useAuth } from "@/contexts/auth-context";
 import DBSortSelector, { type AppsResourcesSortType } from "../components/DBSortSelector";
-import AppSubmissionForm from "@/app/(public)/submit/components/AppSubmissionForm";
 
 interface AppWithLikes extends App {
   likes?: LikeAggregation;
@@ -22,10 +22,9 @@ export default function AppsPage() {
   const [tagFilter, setTagFilter] = useState<string>("");
   const [searchQuery, setSearchQuery] = useState<string>("");
   const [sortBy, setSortBy] = useState<AppsResourcesSortType>('likes');
-  const [editingApp, setEditingApp] = useState<AppWithLikes | null>(null);
-  const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [deletingApp, setDeletingApp] = useState<AppWithLikes | null>(null);
+  const router = useRouter();
   const { isAuthenticated, user } = useAuth();
 
   useEffect(() => {
@@ -380,8 +379,7 @@ export default function AppsPage() {
                       totalCount={app.likes?.total || 0}
                       onChange={handleLikeChange}
                       onEdit={() => {
-                        setEditingApp(app);
-                        setEditDialogOpen(true);
+                        router.push(`/db/apps/${app.id}/edit`);
                       }}
                       onDelete={() => {
                         setDeletingApp(app);
@@ -433,41 +431,6 @@ export default function AppsPage() {
           })}
         </div>
       )}
-
-      {/* Edit Dialog */}
-      <Dialog open={editDialogOpen} onOpenChange={setEditDialogOpen}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Edit App - Submit for Review</DialogTitle>
-          </DialogHeader>
-          {editingApp && (
-            <AppSubmissionForm
-              onSuccess={() => {
-                setEditDialogOpen(false);
-                setEditingApp(null);
-                alert("Edit request submitted. It will be reviewed by the community.");
-                fetchApps();
-              }}
-              onCancel={() => {
-                setEditDialogOpen(false);
-                setEditingApp(null);
-              }}
-              initialData={{
-                name: editingApp.name,
-                description: editingApp.description || "",
-                url: editingApp.url,
-                category: editingApp.category,
-                logo: editingApp.logo || "",
-                tags: editingApp.tags?.join(", ") || "",
-              }}
-              onSubmit={async (data) => {
-                await apiClient.submitAppEdit(editingApp.id, data);
-              }}
-              isEdit={true}
-            />
-          )}
-        </DialogContent>
-      </Dialog>
 
       {/* Delete Dialog */}
       <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
