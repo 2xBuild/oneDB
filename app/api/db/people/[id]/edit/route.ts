@@ -8,13 +8,14 @@ const peopleService = new PeopleService();
 
 export async function POST(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const user = await requireAuth();
+    const { id } = await params;
     const body = await request.json();
     const validated = createPeopleSchema.parse(body);
-    const contribution = await peopleService.submitEdit(user.id, params.id, validated);
+    const contribution = await peopleService.submitEdit(user.id, id, validated);
     return success(contribution, 201);
   } catch (err) {
     if (err instanceof Error && err.name === "ZodError") {
