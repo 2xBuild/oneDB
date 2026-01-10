@@ -210,15 +210,15 @@ export default function ArenaClient() {
                 {/* Header Section */}
                 <div className="mb-8 flex items-center justify-between">
                     <div>
-                        <h1 className="text-2xl font-bold mb-1">Arena</h1>
-                        <p className="text-sm text-muted-foreground">Discover and explore ideas and projects</p>
+                        <h1 className="text-xl font-bold mb-1">Arena</h1>
+                        <p className="text-xs text-muted-foreground">Discover and explore ideas and projects</p>
                     </div>
                     <Button 
                         onClick={() => router.push(`/submit?type=${activeTab === 'ideas' ? 'idea' : 'project'}`)}
-                        className="flex items-center gap-2 text-background hover:text-background dark:hover:text-background"
+                        className="flex items-center gap-1.5 text-sm px-3 py-1.5 h-8 text-background hover:text-background dark:hover:text-background"
                     >
                         Add your {activeTab === 'ideas' ? 'idea' : 'project'}
-                        <ArrowRight className="h-4 w-4" />
+                        <ArrowRight className="h-3.5 w-3.5" />
                     </Button>
                 </div>
 
