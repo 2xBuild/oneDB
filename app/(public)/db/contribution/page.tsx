@@ -361,40 +361,40 @@ export default function ContributorsPage() {
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             {contributorsData.dbContributors.map((contributor) => (
-              <div key={contributor.userId} className="border border-muted rounded-lg p-6">
-                <div className="flex items-center gap-3 mb-4">
+              <div key={contributor.userId} className="border border-muted rounded-lg p-4">
+                <div className="flex items-center gap-3 mb-3">
                   {contributor.avatar ? (
                     <img
                       src={contributor.avatar}
                       alt={contributor.name || "Contributor"}
-                      className="w-8 h-8 rounded-full"
+                      className="w-8 h-8 rounded-full flex-shrink-0"
                     />
                   ) : (
-                    <div className="w-8 h-8 rounded-full bg-gray-300 flex items-center justify-center">
+                    <div className="w-8 h-8 rounded-full bg-gray-300 flex items-center justify-center flex-shrink-0">
                       <span className="text-gray-600 font-semibold text-sm">
                         {(contributor.name || "C")[0].toUpperCase()}
                       </span>
                     </div>
                   )}
-                  <div className="flex-1">
-                    <h3 className="font-bold text-lg">{contributor.name || "Anonymous"}</h3>
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-baseline gap-2 flex-wrap">
+                      <h3 className="font-semibold text-base truncate">{contributor.name || "Anonymous"}</h3>
+                      <span className="text-sm text-muted-foreground font-medium">~ 
+                        {contributor.totalSubmissions} {contributor.totalSubmissions === 1 ? "contribution" : "contributions"}
+                      </span>
+                    </div>
                   </div>
                 </div>
-                <div className="space-y-2">
-                  <div className="text-2xl font-bold text-primary">
-                    {contributor.totalSubmissions} {contributor.totalSubmissions === 1 ? "submission" : "submissions"}
-                  </div>
-                  <div className="text-sm text-muted-foreground space-y-1">
-                    {contributor.peopleCount > 0 && (
-                      <div>People: {contributor.peopleCount}</div>
-                    )}
-                    {contributor.resourcesCount > 0 && (
-                      <div>Resources: {contributor.resourcesCount}</div>
-                    )}
-                    {contributor.appsCount > 0 && (
-                      <div>Apps: {contributor.appsCount}</div>
-                    )}
-                  </div>
+                <div className="flex items-center gap-3 text-xs text-muted-foreground flex-wrap">
+                  {contributor.peopleCount > 0 && (
+                    <span>People: <span className="font-medium">{contributor.peopleCount}</span></span>
+                  )}
+                  {contributor.resourcesCount > 0 && (
+                    <span>Resources: <span className="font-medium">{contributor.resourcesCount}</span></span>
+                  )}
+                  {contributor.appsCount > 0 && (
+                    <span>Apps: <span className="font-medium">{contributor.appsCount}</span></span>
+                  )}
                 </div>
               </div>
             ))}
