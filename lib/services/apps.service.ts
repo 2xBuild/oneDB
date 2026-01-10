@@ -140,6 +140,42 @@ export class AppsService {
   }
 
   async approve(id: string) {
+    const contribution = await this.findById(id);
+    
+    if (contribution.contributionType === "edit" && contribution.originalId) {
+      const original = await this.findById(contribution.originalId);
+      if (original.status !== "approved") {
+        throw new Error("Cannot edit a non-approved item");
+      }
+      
+      await db
+        .update(apps)
+        .set({
+          name: contribution.name,
+          description: contribution.description,
+          url: contribution.url,
+          category: contribution.category,
+          tags: contribution.tags,
+          logo: contribution.logo,
+          updatedAt: new Date(),
+        })
+        .where(eq(apps.id, contribution.originalId));
+      
+      await db.delete(apps).where(eq(apps.id, id));
+      return { id, approved: true };
+    }
+    
+    if (contribution.contributionType === "delete" && contribution.originalId) {
+      const original = await this.findById(contribution.originalId);
+      if (original.status !== "approved") {
+        throw new Error("Cannot delete a non-approved item");
+      }
+      
+      await db.delete(apps).where(eq(apps.id, contribution.originalId));
+      await db.delete(apps).where(eq(apps.id, id));
+      return { id, deleted: true };
+    }
+    
     const [updated] = await db
       .update(apps)
       .set({
@@ -151,20 +187,59 @@ export class AppsService {
 
     return updated;
   }
+  
+  async submitEdit(userId: string, originalId: string, data: CreateAppInput) {
+    const original = await this.findById(originalId);
+    if (original.status !== "approved") {
+      throw new Error("Can only edit approved items");
+    }
+    
+    const contributionId = randomBytes(16).toString("hex");
+    const [contribution] = await db
+      .insert(apps)
+      .values({
+        id: contributionId,
+        ...data,
+        submittedBy: userId,
+        status: "pending",
+        contributionType: "edit",
+        originalId: originalId,
+      })
+      .returning();
+    
+    return contribution;
+  }
+  
+  async submitDelete(userId: string, originalId: string) {
+    const original = await this.findById(originalId);
+    if (original.status !== "approved") {
+      throw new Error("Can only delete approved items");
+    }
+    
+    const contributionId = randomBytes(16).toString("hex");
+    const [contribution] = await db
+      .insert(apps)
+      .values({
+        id: contributionId,
+        name: original.name, // Keep original data for display
+        description: original.description,
+        url: original.url,
+        category: original.category,
+        tags: original.tags,
+        logo: original.logo,
+        submittedBy: userId,
+        status: "pending",
+        contributionType: "delete",
+        originalId: originalId,
+      })
+      .returning();
+    
+    return contribution;
+  }
 
   async delete(id: string) {
-    // Soft delete
-    const [deleted] = await db
-      .update(apps)
-      .set({
-        deletedAt: new Date(),
-        updatedAt: new Date(),
-        status: "rejected",
-      })
-      .where(eq(apps.id, id))
-      .returning();
-
-    return deleted;
+    await db.delete(apps).where(eq(apps.id, id));
+    return { id, deleted: true };
   }
 
   async getUniqueCategories() {

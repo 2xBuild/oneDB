@@ -7,19 +7,32 @@ import { apiClient } from "@/lib/api";
 interface ResourceSubmissionFormProps {
   onSuccess: () => void;
   onCancel: () => void;
+  initialData?: {
+    title: string;
+    description?: string;
+    url: string;
+    category: string;
+    image?: string;
+    tags?: string;
+  };
+  onSubmit?: (data: any) => Promise<void>;
+  isEdit?: boolean;
 }
 
 export default function ResourceSubmissionForm({
   onSuccess,
   onCancel,
+  initialData,
+  onSubmit,
+  isEdit = false,
 }: ResourceSubmissionFormProps) {
   const [formData, setFormData] = useState({
-    title: "",
-    description: "",
-    url: "",
-    category: "",
-    image: "",
-    tags: "",
+    title: initialData?.title || "",
+    description: initialData?.description || "",
+    url: initialData?.url || "",
+    category: initialData?.category || "",
+    image: initialData?.image || "",
+    tags: initialData?.tags || "",
   });
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -52,7 +65,7 @@ export default function ResourceSubmissionForm({
     setError(null);
 
     try {
-      await apiClient.createResource({
+      const submitData = {
         title: formData.title,
         description: formData.description || undefined,
         url: formData.url,
@@ -61,10 +74,16 @@ export default function ResourceSubmissionForm({
         tags: formData.tags
           ? formData.tags.split(",").map((t) => t.trim()).filter(Boolean)
           : undefined,
-      });
+      };
+      
+      if (onSubmit) {
+        await onSubmit(submitData);
+      } else {
+        await apiClient.createResource(submitData);
+      }
       onSuccess();
     } catch (err: any) {
-      setError(err.message || "Failed to submit resource");
+      setError(err.message || `Failed to ${isEdit ? "submit edit" : "submit resource"}`);
     } finally {
       setSubmitting(false);
     }
@@ -72,9 +91,11 @@ export default function ResourceSubmissionForm({
 
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
-      <h2 className="text-2xl font-bold">Submit Resource</h2>
+      <h2 className="text-2xl font-bold">{isEdit ? "Edit Resource" : "Submit Resource"}</h2>
       <p className="text-sm text-muted-foreground">
-        This submission will require community approval before being added to the database.
+        {isEdit 
+          ? "This edit request will require community approval before being applied."
+          : "This submission will require community approval before being added to the database."}
       </p>
 
       <div>
@@ -210,7 +231,7 @@ export default function ResourceSubmissionForm({
 
       <div className="flex gap-4">
         <Button type="submit" disabled={submitting}>
-          {submitting ? "Submitting..." : "Submit for Review"}
+          {submitting ? (isEdit ? "Submitting Edit..." : "Submitting...") : (isEdit ? "Submit Edit for Review" : "Submit for Review")}
         </Button>
         <Button type="button" variant="outline" onClick={onCancel}>
           Cancel

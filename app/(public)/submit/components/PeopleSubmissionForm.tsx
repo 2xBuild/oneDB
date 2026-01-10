@@ -8,20 +8,34 @@ import { normalizePlatformName } from "@/lib/format-utils";
 interface PeopleSubmissionFormProps {
   onSuccess: () => void;
   onCancel: () => void;
+  initialData?: {
+    name: string;
+    description?: string;
+    socialMediaPlatform: string;
+    socialMediaLink: string;
+    image?: string;
+    tags?: string;
+    followersCount?: string;
+  };
+  onSubmit?: (data: any) => Promise<void>;
+  isEdit?: boolean;
 }
 
 export default function PeopleSubmissionForm({
   onSuccess,
   onCancel,
+  initialData,
+  onSubmit,
+  isEdit = false,
 }: PeopleSubmissionFormProps) {
   const [formData, setFormData] = useState({
-    name: "",
-    description: "",
-    socialMediaPlatform: "",
-    socialMediaLink: "",
-    image: "",
-    tags: "",
-    followersCount: "",
+    name: initialData?.name || "",
+    description: initialData?.description || "",
+    socialMediaPlatform: initialData?.socialMediaPlatform || "",
+    socialMediaLink: initialData?.socialMediaLink || "",
+    image: initialData?.image || "",
+    tags: initialData?.tags || "",
+    followersCount: initialData?.followersCount || "",
   });
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -54,7 +68,7 @@ export default function PeopleSubmissionForm({
     setError(null);
 
     try {
-      await apiClient.createPerson({
+      const submitData = {
         name: formData.name,
         description: formData.description || undefined,
         socialMediaPlatform: normalizePlatformName(formData.socialMediaPlatform),
@@ -66,10 +80,16 @@ export default function PeopleSubmissionForm({
         followersCount: formData.followersCount
           ? parseInt(formData.followersCount, 10)
           : undefined,
-      });
+      };
+      
+      if (onSubmit) {
+        await onSubmit(submitData);
+      } else {
+        await apiClient.createPerson(submitData);
+      }
       onSuccess();
     } catch (err: any) {
-      setError(err.message || "Failed to submit person");
+      setError(err.message || `Failed to ${isEdit ? "submit edit" : "submit person"}`);
     } finally {
       setSubmitting(false);
     }
@@ -77,9 +97,11 @@ export default function PeopleSubmissionForm({
 
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
-      <h2 className="text-2xl font-bold">Submit Person</h2>
+      <h2 className="text-2xl font-bold">{isEdit ? "Edit Person" : "Submit Person"}</h2>
       <p className="text-sm text-muted-foreground">
-        This submission will require community approval before being added to the database.
+        {isEdit 
+          ? "This edit request will require community approval before being applied."
+          : "This submission will require community approval before being added to the database."}
       </p>
 
       <div>
@@ -229,7 +251,7 @@ export default function PeopleSubmissionForm({
 
       <div className="flex gap-4">
         <Button type="submit" disabled={submitting}>
-          {submitting ? "Submitting..." : "Submit for Review"}
+          {submitting ? (isEdit ? "Submitting Edit..." : "Submitting...") : (isEdit ? "Submit Edit for Review" : "Submit for Review")}
         </Button>
         <Button type="button" variant="outline" onClick={onCancel}>
           Cancel

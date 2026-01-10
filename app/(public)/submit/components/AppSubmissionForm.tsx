@@ -7,19 +7,32 @@ import { apiClient } from "@/lib/api";
 interface AppSubmissionFormProps {
   onSuccess: () => void;
   onCancel: () => void;
+  initialData?: {
+    name: string;
+    description?: string;
+    url: string;
+    category: string;
+    logo?: string;
+    tags?: string;
+  };
+  onSubmit?: (data: any) => Promise<void>;
+  isEdit?: boolean;
 }
 
 export default function AppSubmissionForm({
   onSuccess,
   onCancel,
+  initialData,
+  onSubmit,
+  isEdit = false,
 }: AppSubmissionFormProps) {
   const [formData, setFormData] = useState({
-    name: "",
-    description: "",
-    url: "",
-    category: "",
-    logo: "",
-    tags: "",
+    name: initialData?.name || "",
+    description: initialData?.description || "",
+    url: initialData?.url || "",
+    category: initialData?.category || "",
+    logo: initialData?.logo || "",
+    tags: initialData?.tags || "",
   });
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -52,7 +65,7 @@ export default function AppSubmissionForm({
     setError(null);
 
     try {
-      await apiClient.createApp({
+      const submitData = {
         name: formData.name,
         description: formData.description || undefined,
         url: formData.url,
@@ -61,10 +74,16 @@ export default function AppSubmissionForm({
         tags: formData.tags
           ? formData.tags.split(",").map((t) => t.trim()).filter(Boolean)
           : undefined,
-      });
+      };
+      
+      if (onSubmit) {
+        await onSubmit(submitData);
+      } else {
+        await apiClient.createApp(submitData);
+      }
       onSuccess();
     } catch (err: any) {
-      setError(err.message || "Failed to submit app");
+      setError(err.message || `Failed to ${isEdit ? "submit edit" : "submit app"}`);
     } finally {
       setSubmitting(false);
     }
@@ -72,9 +91,11 @@ export default function AppSubmissionForm({
 
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
-      <h2 className="text-2xl font-bold">Submit App</h2>
+      <h2 className="text-2xl font-bold">{isEdit ? "Edit App" : "Submit App"}</h2>
       <p className="text-sm text-muted-foreground">
-        This submission will require community approval before being added to the database.
+        {isEdit 
+          ? "This edit request will require community approval before being applied."
+          : "This submission will require community approval before being added to the database."}
       </p>
 
       <div>
@@ -210,7 +231,7 @@ export default function AppSubmissionForm({
 
       <div className="flex gap-4">
         <Button type="submit" disabled={submitting}>
-          {submitting ? "Submitting..." : "Submit for Review"}
+          {submitting ? (isEdit ? "Submitting Edit..." : "Submitting...") : (isEdit ? "Submit Edit for Review" : "Submit for Review")}
         </Button>
         <Button type="button" variant="outline" onClick={onCancel}>
           Cancel

@@ -145,6 +145,43 @@ export class PeopleService {
   }
 
   async approve(id: string) {
+    const contribution = await this.findById(id);
+    
+    if (contribution.contributionType === "edit" && contribution.originalId) {
+      const original = await this.findById(contribution.originalId);
+      if (original.status !== "approved") {
+        throw new Error("Cannot edit a non-approved item");
+      }
+      
+      await db
+        .update(people)
+        .set({
+          name: contribution.name,
+          description: contribution.description,
+          socialMediaPlatform: contribution.socialMediaPlatform,
+          socialMediaLink: contribution.socialMediaLink,
+          tags: contribution.tags,
+          image: contribution.image,
+          followersCount: contribution.followersCount,
+          updatedAt: new Date(),
+        })
+        .where(eq(people.id, contribution.originalId));
+      
+      await db.delete(people).where(eq(people.id, id));
+      return { id, approved: true };
+    }
+    
+    if (contribution.contributionType === "delete" && contribution.originalId) {
+      const original = await this.findById(contribution.originalId);
+      if (original.status !== "approved") {
+        throw new Error("Cannot delete a non-approved item");
+      }
+      
+      await db.delete(people).where(eq(people.id, contribution.originalId));
+      await db.delete(people).where(eq(people.id, id));
+      return { id, deleted: true };
+    }
+    
     const [updated] = await db
       .update(people)
       .set({
@@ -156,20 +193,61 @@ export class PeopleService {
 
     return updated;
   }
+  
+  async submitEdit(userId: string, originalId: string, data: CreatePeopleInput) {
+    const original = await this.findById(originalId);
+    if (original.status !== "approved") {
+      throw new Error("Can only edit approved items");
+    }
+    
+    const contributionId = randomBytes(16).toString("hex");
+    const [contribution] = await db
+      .insert(people)
+      .values({
+        id: contributionId,
+        ...data,
+        socialMediaPlatform: normalizePlatformName(data.socialMediaPlatform),
+        submittedBy: userId,
+        status: "pending",
+        contributionType: "edit",
+        originalId: originalId,
+      })
+      .returning();
+    
+    return contribution;
+  }
+  
+  async submitDelete(userId: string, originalId: string) {
+    const original = await this.findById(originalId);
+    if (original.status !== "approved") {
+      throw new Error("Can only delete approved items");
+    }
+    
+    const contributionId = randomBytes(16).toString("hex");
+    const [contribution] = await db
+      .insert(people)
+      .values({
+        id: contributionId,
+        name: original.name, // Keep original data for display
+        description: original.description,
+        socialMediaPlatform: original.socialMediaPlatform,
+        socialMediaLink: original.socialMediaLink,
+        tags: original.tags,
+        image: original.image,
+        followersCount: original.followersCount,
+        submittedBy: userId,
+        status: "pending",
+        contributionType: "delete",
+        originalId: originalId,
+      })
+      .returning();
+    
+    return contribution;
+  }
 
   async delete(id: string) {
-    // Soft delete
-    const [deleted] = await db
-      .update(people)
-      .set({
-        deletedAt: new Date(),
-        updatedAt: new Date(),
-        status: "rejected",
-      })
-      .where(eq(people.id, id))
-      .returning();
-
-    return deleted;
+    await db.delete(people).where(eq(people.id, id));
+    return { id, deleted: true };
   }
 
   async getUniquePlatforms() {

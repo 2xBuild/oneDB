@@ -3,11 +3,12 @@
 import { useEffect, useState, useMemo } from "react";
 import { apiClient } from "@/lib/api";
 import type { Resource, LikeAggregation } from "@/lib/types";
-import { Input, LikeDislike } from "@/components/ui";
+import { Input, LikeEdit, Dialog, DialogContent, DialogHeader, DialogTitle, Button } from "@/components/ui";
 import Image from "next/image";
-import { ExternalLink, Globe, ChevronDown } from "lucide-react";
+import { ExternalLink, Globe, ChevronDown, Trash2 } from "lucide-react";
 import { useAuth } from "@/contexts/auth-context";
 import DBSortSelector, { type AppsResourcesSortType } from "../components/DBSortSelector";
+import ResourceSubmissionForm from "@/app/(public)/submit/components/ResourceSubmissionForm";
 
 interface ResourceWithLikes extends Resource {
   likes?: LikeAggregation;
@@ -21,6 +22,10 @@ export default function ResourcesPage() {
   const [tagFilter, setTagFilter] = useState<string>("");
   const [searchQuery, setSearchQuery] = useState<string>("");
   const [sortBy, setSortBy] = useState<AppsResourcesSortType>('likes');
+  const [editingResource, setEditingResource] = useState<ResourceWithLikes | null>(null);
+  const [editDialogOpen, setEditDialogOpen] = useState(false);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [deletingResource, setDeletingResource] = useState<ResourceWithLikes | null>(null);
   const { isAuthenticated, user } = useAuth();
 
   useEffect(() => {
@@ -367,12 +372,19 @@ export default function ResourcesPage() {
 
                   {/* Combined Like/Dislike and Visit Button */}
                   <div className="flex-shrink-0 flex items-center gap-1 sm:gap-2">
-                    <LikeDislike
+                    <LikeEdit
                       isLike={resource.userLike ?? null}
                       likesCount={resource.likes?.likes || 0}
-                      dislikesCount={resource.likes?.dislikes || 0}
                       totalCount={resource.likes?.total || 0}
                       onChange={handleLikeChange}
+                      onEdit={() => {
+                        setEditingResource(resource);
+                        setEditDialogOpen(true);
+                      }}
+                      onDelete={() => {
+                        setDeletingResource(resource);
+                        setDeleteDialogOpen(true);
+                      }}
                       disabled={!isAuthenticated}
                       size="sm"
                       showCounts={true}
@@ -419,6 +431,87 @@ export default function ResourcesPage() {
           })}
         </div>
       )}
+
+      {/* Edit Dialog */}
+      <Dialog open={editDialogOpen} onOpenChange={setEditDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Edit Resource - Submit for Review</DialogTitle>
+          </DialogHeader>
+          {editingResource && (
+            <ResourceSubmissionForm
+              onSuccess={() => {
+                setEditDialogOpen(false);
+                setEditingResource(null);
+                alert("Edit request submitted. It will be reviewed by the community.");
+                fetchResources();
+              }}
+              onCancel={() => {
+                setEditDialogOpen(false);
+                setEditingResource(null);
+              }}
+              initialData={{
+                title: editingResource.title,
+                description: editingResource.description || "",
+                url: editingResource.url,
+                category: editingResource.category,
+                image: editingResource.image || "",
+                tags: editingResource.tags?.join(", ") || "",
+              }}
+              onSubmit={async (data) => {
+                await apiClient.submitResourceEdit(editingResource.id, data);
+              }}
+              isEdit={true}
+            />
+          )}
+        </DialogContent>
+      </Dialog>
+
+      {/* Delete Dialog */}
+      <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Delete Resource - Submit for Review</DialogTitle>
+          </DialogHeader>
+          {deletingResource && (
+            <div className="space-y-4">
+              <p className="text-sm text-muted-foreground">
+                Are you sure you want to request deletion of <strong>{deletingResource.title}</strong>? 
+                This will be sent for community voting and requires approval before the item is deleted.
+              </p>
+              <div className="flex gap-4 justify-end">
+                <Button
+                  variant="outline"
+                  onClick={() => {
+                    setDeleteDialogOpen(false);
+                    setDeletingResource(null);
+                  }}
+                >
+                  Cancel
+                </Button>
+                <Button
+                  variant="destructive"
+                  onClick={async () => {
+                    try {
+                      await apiClient.submitResourceDelete(deletingResource.id);
+                      setDeleteDialogOpen(false);
+                      setDeletingResource(null);
+                      alert("Delete request submitted. It will be reviewed by the community.");
+                      fetchResources();
+                    } catch (error: any) {
+                      console.error("Error submitting delete:", error);
+                      alert(error?.response?.data?.error || "Failed to submit delete request.");
+                    }
+                  }}
+                >
+                  <Trash2 className="h-4 w-4 mr-2" />
+                  Submit Delete Request
+                </Button>
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

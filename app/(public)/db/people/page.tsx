@@ -3,12 +3,13 @@
 import { useEffect, useState, useCallback, useMemo } from "react";
 import { apiClient } from "@/lib/api";
 import type { Person, LikeAggregation } from "@/lib/types";
-import { Input, LikeDislike } from "@/components/ui";
+import { Input, LikeEdit, Dialog, DialogContent, DialogHeader, DialogTitle, Button } from "@/components/ui";
 import Image from "next/image";
-import { Twitter, Linkedin, Youtube, Instagram, Github, Globe, ExternalLink } from "lucide-react";
+import { Twitter, Linkedin, Youtube, Instagram, Github, Globe, ExternalLink, Trash2 } from "lucide-react";
 import { useAuth } from "@/contexts/auth-context";
 import { formatFollowerCount, getFollowerLabel, capitalizeFirst, getPlatformDisplayName, normalizePlatformName } from "@/lib/format-utils";
 import DBSortSelector, { type PeopleSortType } from "../components/DBSortSelector";
+import PeopleSubmissionForm from "@/app/(public)/submit/components/PeopleSubmissionForm";
 
 const platformIcons: Record<string, any> = {
   twitter: Twitter,
@@ -36,6 +37,10 @@ export default function PeoplePage() {
   const [tagFilter, setTagFilter] = useState<string>("");
   const [searchQuery, setSearchQuery] = useState<string>("");
   const [sortBy, setSortBy] = useState<PeopleSortType>('likes');
+  const [editingPerson, setEditingPerson] = useState<PersonWithLikes | null>(null);
+  const [editDialogOpen, setEditDialogOpen] = useState(false);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [deletingPerson, setDeletingPerson] = useState<PersonWithLikes | null>(null);
   const { isAuthenticated, user } = useAuth();
 
   useEffect(() => {
@@ -420,14 +425,21 @@ export default function PeoplePage() {
                     )}
                   </div>
 
-                  {/* Combined Like/Dislike and Follow Button */}
+                  {/* Combined Like/Edit and Follow Button */}
                   <div className="flex-shrink-0 flex items-center gap-1 sm:gap-2">
-                    <LikeDislike
+                    <LikeEdit
                       isLike={person.userLike ?? null}
                       likesCount={person.likes?.likes || 0}
-                      dislikesCount={person.likes?.dislikes || 0}
                       totalCount={person.likes?.total || 0}
                       onChange={handleLikeChange}
+                      onEdit={() => {
+                        setEditingPerson(person);
+                        setEditDialogOpen(true);
+                      }}
+                      onDelete={() => {
+                        setDeletingPerson(person);
+                        setDeleteDialogOpen(true);
+                      }}
                       disabled={!isAuthenticated}
                       size="sm"
                       showCounts={true}
@@ -494,6 +506,88 @@ export default function PeoplePage() {
           })}
         </div>
       )}
+
+      {/* Edit Dialog */}
+      <Dialog open={editDialogOpen} onOpenChange={setEditDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Edit Person - Submit for Review</DialogTitle>
+          </DialogHeader>
+          {editingPerson && (
+            <PeopleSubmissionForm
+              onSuccess={() => {
+                setEditDialogOpen(false);
+                setEditingPerson(null);
+                alert("Edit request submitted. It will be reviewed by the community.");
+                fetchPeople();
+              }}
+              onCancel={() => {
+                setEditDialogOpen(false);
+                setEditingPerson(null);
+              }}
+              initialData={{
+                name: editingPerson.name,
+                description: editingPerson.description || "",
+                socialMediaPlatform: editingPerson.socialMediaPlatform,
+                socialMediaLink: editingPerson.socialMediaLink,
+                image: editingPerson.image || "",
+                tags: editingPerson.tags?.join(", ") || "",
+                followersCount: editingPerson.followersCount?.toString() || "",
+              }}
+              onSubmit={async (data) => {
+                await apiClient.submitPersonEdit(editingPerson.id, data);
+              }}
+              isEdit={true}
+            />
+          )}
+        </DialogContent>
+      </Dialog>
+
+      {/* Delete Dialog */}
+      <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Delete Person - Submit for Review</DialogTitle>
+          </DialogHeader>
+          {deletingPerson && (
+            <div className="space-y-4">
+              <p className="text-sm text-muted-foreground">
+                Are you sure you want to request deletion of <strong>{deletingPerson.name}</strong>? 
+                This will be sent for community voting and requires approval before the item is deleted.
+              </p>
+              <div className="flex gap-4 justify-end">
+                <Button
+                  variant="outline"
+                  onClick={() => {
+                    setDeleteDialogOpen(false);
+                    setDeletingPerson(null);
+                  }}
+                >
+                  Cancel
+                </Button>
+                <Button
+                  variant="destructive"
+                  onClick={async () => {
+                    try {
+                      await apiClient.submitPersonDelete(deletingPerson.id);
+                      setDeleteDialogOpen(false);
+                      setDeletingPerson(null);
+                      alert("Delete request submitted. It will be reviewed by the community.");
+                      fetchPeople();
+                    } catch (error: any) {
+                      console.error("Error submitting delete:", error);
+                      alert(error?.response?.data?.error || "Failed to submit delete request.");
+                    }
+                  }}
+                >
+                  <Trash2 className="h-4 w-4 mr-2" />
+                  Submit Delete Request
+                </Button>
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

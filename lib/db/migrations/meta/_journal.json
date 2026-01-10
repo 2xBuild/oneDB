@@ -8,6 +8,13 @@
       "when": 1767983785589,
       "tag": "0000_open_killmonger",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1768061370181,
+      "tag": "0001_curved_sleeper",
+      "breakpoints": true
     }
   ]
 }

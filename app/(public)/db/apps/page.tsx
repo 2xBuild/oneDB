@@ -3,11 +3,12 @@
 import { useEffect, useState, useMemo } from "react";
 import { apiClient } from "@/lib/api";
 import type { App, LikeAggregation } from "@/lib/types";
-import { Input, LikeDislike } from "@/components/ui";
+import { Input, LikeEdit, Dialog, DialogContent, DialogHeader, DialogTitle, Button } from "@/components/ui";
 import Image from "next/image";
-import { ExternalLink, Globe, ChevronDown } from "lucide-react";
+import { ExternalLink, Globe, ChevronDown, Trash2 } from "lucide-react";
 import { useAuth } from "@/contexts/auth-context";
 import DBSortSelector, { type AppsResourcesSortType } from "../components/DBSortSelector";
+import AppSubmissionForm from "@/app/(public)/submit/components/AppSubmissionForm";
 
 interface AppWithLikes extends App {
   likes?: LikeAggregation;
@@ -21,6 +22,10 @@ export default function AppsPage() {
   const [tagFilter, setTagFilter] = useState<string>("");
   const [searchQuery, setSearchQuery] = useState<string>("");
   const [sortBy, setSortBy] = useState<AppsResourcesSortType>('likes');
+  const [editingApp, setEditingApp] = useState<AppWithLikes | null>(null);
+  const [editDialogOpen, setEditDialogOpen] = useState(false);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [deletingApp, setDeletingApp] = useState<AppWithLikes | null>(null);
   const { isAuthenticated, user } = useAuth();
 
   useEffect(() => {
@@ -367,14 +372,21 @@ export default function AppsPage() {
                     )}
                   </div>
 
-                  {/* Combined Like/Dislike and Visit Button */}
+                  {/* Combined Like/Edit and Visit Button */}
                   <div className="flex-shrink-0 flex items-center gap-1 sm:gap-2">
-                    <LikeDislike
+                    <LikeEdit
                       isLike={app.userLike ?? null}
                       likesCount={app.likes?.likes || 0}
-                      dislikesCount={app.likes?.dislikes || 0}
                       totalCount={app.likes?.total || 0}
                       onChange={handleLikeChange}
+                      onEdit={() => {
+                        setEditingApp(app);
+                        setEditDialogOpen(true);
+                      }}
+                      onDelete={() => {
+                        setDeletingApp(app);
+                        setDeleteDialogOpen(true);
+                      }}
                       disabled={!isAuthenticated}
                       size="sm"
                       showCounts={true}
@@ -421,6 +433,87 @@ export default function AppsPage() {
           })}
         </div>
       )}
+
+      {/* Edit Dialog */}
+      <Dialog open={editDialogOpen} onOpenChange={setEditDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Edit App - Submit for Review</DialogTitle>
+          </DialogHeader>
+          {editingApp && (
+            <AppSubmissionForm
+              onSuccess={() => {
+                setEditDialogOpen(false);
+                setEditingApp(null);
+                alert("Edit request submitted. It will be reviewed by the community.");
+                fetchApps();
+              }}
+              onCancel={() => {
+                setEditDialogOpen(false);
+                setEditingApp(null);
+              }}
+              initialData={{
+                name: editingApp.name,
+                description: editingApp.description || "",
+                url: editingApp.url,
+                category: editingApp.category,
+                logo: editingApp.logo || "",
+                tags: editingApp.tags?.join(", ") || "",
+              }}
+              onSubmit={async (data) => {
+                await apiClient.submitAppEdit(editingApp.id, data);
+              }}
+              isEdit={true}
+            />
+          )}
+        </DialogContent>
+      </Dialog>
+
+      {/* Delete Dialog */}
+      <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Delete App - Submit for Review</DialogTitle>
+          </DialogHeader>
+          {deletingApp && (
+            <div className="space-y-4">
+              <p className="text-sm text-muted-foreground">
+                Are you sure you want to request deletion of <strong>{deletingApp.name}</strong>? 
+                This will be sent for community voting and requires approval before the item is deleted.
+              </p>
+              <div className="flex gap-4 justify-end">
+                <Button
+                  variant="outline"
+                  onClick={() => {
+                    setDeleteDialogOpen(false);
+                    setDeletingApp(null);
+                  }}
+                >
+                  Cancel
+                </Button>
+                <Button
+                  variant="destructive"
+                  onClick={async () => {
+                    try {
+                      await apiClient.submitAppDelete(deletingApp.id);
+                      setDeleteDialogOpen(false);
+                      setDeletingApp(null);
+                      alert("Delete request submitted. It will be reviewed by the community.");
+                      fetchApps();
+                    } catch (error: any) {
+                      console.error("Error submitting delete:", error);
+                      alert(error?.response?.data?.error || "Failed to submit delete request.");
+                    }
+                  }}
+                >
+                  <Trash2 className="h-4 w-4 mr-2" />
+                  Submit Delete Request
+                </Button>
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

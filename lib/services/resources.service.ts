@@ -140,6 +140,42 @@ export class ResourcesService {
   }
 
   async approve(id: string) {
+    const contribution = await this.findById(id);
+    
+    if (contribution.contributionType === "edit" && contribution.originalId) {
+      const original = await this.findById(contribution.originalId);
+      if (original.status !== "approved") {
+        throw new Error("Cannot edit a non-approved item");
+      }
+      
+      await db
+        .update(resources)
+        .set({
+          title: contribution.title,
+          description: contribution.description,
+          url: contribution.url,
+          category: contribution.category,
+          tags: contribution.tags,
+          image: contribution.image,
+          updatedAt: new Date(),
+        })
+        .where(eq(resources.id, contribution.originalId));
+      
+      await db.delete(resources).where(eq(resources.id, id));
+      return { id, approved: true };
+    }
+    
+    if (contribution.contributionType === "delete" && contribution.originalId) {
+      const original = await this.findById(contribution.originalId);
+      if (original.status !== "approved") {
+        throw new Error("Cannot delete a non-approved item");
+      }
+      
+      await db.delete(resources).where(eq(resources.id, contribution.originalId));
+      await db.delete(resources).where(eq(resources.id, id));
+      return { id, deleted: true };
+    }
+    
     const [updated] = await db
       .update(resources)
       .set({
@@ -151,20 +187,59 @@ export class ResourcesService {
 
     return updated;
   }
+  
+  async submitEdit(userId: string, originalId: string, data: CreateResourceInput) {
+    const original = await this.findById(originalId);
+    if (original.status !== "approved") {
+      throw new Error("Can only edit approved items");
+    }
+    
+    const contributionId = randomBytes(16).toString("hex");
+    const [contribution] = await db
+      .insert(resources)
+      .values({
+        id: contributionId,
+        ...data,
+        submittedBy: userId,
+        status: "pending",
+        contributionType: "edit",
+        originalId: originalId,
+      })
+      .returning();
+    
+    return contribution;
+  }
+  
+  async submitDelete(userId: string, originalId: string) {
+    const original = await this.findById(originalId);
+    if (original.status !== "approved") {
+      throw new Error("Can only delete approved items");
+    }
+    
+    const contributionId = randomBytes(16).toString("hex");
+    const [contribution] = await db
+      .insert(resources)
+      .values({
+        id: contributionId,
+        title: original.title, // Keep original data for display
+        description: original.description,
+        url: original.url,
+        category: original.category,
+        tags: original.tags,
+        image: original.image,
+        submittedBy: userId,
+        status: "pending",
+        contributionType: "delete",
+        originalId: originalId,
+      })
+      .returning();
+    
+    return contribution;
+  }
 
   async delete(id: string) {
-    // Soft delete
-    const [deleted] = await db
-      .update(resources)
-      .set({
-        deletedAt: new Date(),
-        updatedAt: new Date(),
-        status: "rejected",
-      })
-      .where(eq(resources.id, id))
-      .returning();
-
-    return deleted;
+    await db.delete(resources).where(eq(resources.id, id));
+    return { id, deleted: true };
   }
 
   async getUniqueCategories() {

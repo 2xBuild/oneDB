@@ -241,6 +241,14 @@ export class ApiClient {
     return this.delete<{ message: string }>(`/db/people/${id}`);
   }
 
+  async submitPersonEdit(id: string, data: CreatePeopleInput) {
+    return this.post<Person>(`/db/people/${id}/edit`, data);
+  }
+
+  async submitPersonDelete(id: string) {
+    return this.post<Person>(`/db/people/${id}/delete`, {});
+  }
+
   async getPeopleCategories() {
     return this.get<string[]>("/db/people/categories");
   }
@@ -288,6 +296,14 @@ export class ApiClient {
     return this.delete<{ message: string }>(`/db/resources/${id}`);
   }
 
+  async submitResourceEdit(id: string, data: CreateResourceInput) {
+    return this.post<Resource>(`/db/resources/${id}/edit`, data);
+  }
+
+  async submitResourceDelete(id: string) {
+    return this.post<Resource>(`/db/resources/${id}/delete`, {});
+  }
+
   async getResourceCategories() {
     return this.get<string[]>("/db/resources/categories");
   }
@@ -333,6 +349,14 @@ export class ApiClient {
 
   async deleteApp(id: string) {
     return this.delete<{ message: string }>(`/db/apps/${id}`);
+  }
+
+  async submitAppEdit(id: string, data: CreateAppInput) {
+    return this.post<App>(`/db/apps/${id}/edit`, data);
+  }
+
+  async submitAppDelete(id: string) {
+    return this.post<App>(`/db/apps/${id}/delete`, {});
   }
 
   async getAppCategories() {

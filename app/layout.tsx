@@ -36,7 +36,7 @@ export const metadata: Metadata = {
     description: "Discover projects, ideas, people, apps, and resources all in one place. Explore, contribute, and build with the oneDB community.",
     images: [
       {
-        url: "/og-image.png",
+        url: "/api/og?type=default&title=oneDB&description=Your one database for all resources, projects, and people",
         width: 1200,
         height: 630,
         alt: "oneDB",
@@ -47,7 +47,7 @@ export const metadata: Metadata = {
     card: "summary_large_image",
     title: "oneDB - Your one database for everything you need",
     description: "Discover projects, ideas, people, apps, and resources all in one place.",
-    images: ["/og-image.png"],
+    images: ["/api/og?type=default&title=oneDB&description=Your one database for all resources, projects, and people"],
     creator: "@onedb",
   },
   robots: {
