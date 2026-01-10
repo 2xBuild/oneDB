@@ -6,6 +6,7 @@ import Footer from "@/components/footer";
 import Navbar from "@/components/navbar"
 import { AuthProvider } from "@/contexts/auth-context";
 import { Providers } from "@/components/providers";
+import { Analytics } from "@vercel/analytics/next";
 
 import { Inter } from 'next/font/google';
 import { ThemeProvider } from "@/components/ui";
@@ -99,7 +100,7 @@ export default function RootLayout({
             </AuthProvider>
           </Providers>
         </ThemeProvider>
-
+        <Analytics />
       </body>
     </html>
   );
