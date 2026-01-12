@@ -190,7 +190,7 @@ export default function ResourceSubmissionForm({
           <div className="mb-2">
             <p className="text-xs text-muted-foreground mb-2">Suggestions:</p>
             <div className="flex flex-wrap gap-2">
-              {tagSuggestions.slice(0, 10).map((tag) => (
+              {tagSuggestions.slice(0, 15).map((tag) => (
                 <button
                   key={tag}
                   type="button"

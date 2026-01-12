@@ -276,7 +276,25 @@ export class PeopleService {
       }
     });
     
-    return Array.from(allTags).sort();
+    // Getting tag counts to sort by popularity
+    const tagCounts = new Map<string, number>();
+    results.forEach((r) => {
+      if (r.tags) {
+        r.tags.forEach((tag) => {
+          tagCounts.set(tag, (tagCounts.get(tag) || 0) + 1);
+        });
+      }
+    });
+    
+    // Sorting by count (descending) then alphabetically
+    const uniqueTags = Array.from(tagCounts.entries())
+      .sort((a, b) => {
+        if (b[1] !== a[1]) return b[1] - a[1]; // Sort by count first
+        return a[0].localeCompare(b[0]); // Then alphabetically
+      })
+      .map(([tag]) => tag);
+    
+    return uniqueTags;
   }
 }
 
