@@ -245,7 +245,7 @@ export interface CreateVoteInput {
   resourceId?: string;
   appId?: string;
   voteType: "upvote" | "downvote";
-  reqType: "add" | "edit" | "delete";
+  reqType?: "add" | "edit" | "delete";
 }
 
 // API types
