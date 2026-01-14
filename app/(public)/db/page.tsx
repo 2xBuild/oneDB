@@ -28,12 +28,7 @@ export default function DbPage() {
         <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12 lg:py-16 max-w-5xl">
             {/* Header */}
             <div className="text-center mb-8 sm:mb-12 lg:mb-16">
-                <h1 className="text-3xl sm:text-4xl lg:text-5xl font-bold mb-3 sm:mb-4">
-                    Browse Our Database
-                </h1>
-                <p className="text-muted-foreground text-sm sm:text-base lg:text-lg max-w-2xl mx-auto">
-                    Explore our curated collection of people, apps, and resources
-                </p>
+                <h1 className="text-xl p-2"> Explore db, our curated collection of people, apps, and resources.</h1>
             </div>
 
             {/* Category Grid */}

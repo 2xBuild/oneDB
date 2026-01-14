@@ -35,7 +35,7 @@ const faqData: FAQItem[] = [
   },
   {
     question:"Why admin approval for DB submissions when you say it's community driven?",
-    answer:"oneDB indeed is community driven but for initial submissions when we don't have a large enough audience to validate the content, we need to have admins to help in moderation process to ensure the quality of the content."
+    answer:"oneDB indeed is community driven but for initial submissions when we don't have a large enough audience to validate the content, we need to have admins to help in moderation process to ensure the quality of the content. Still community's decision hold more weight than admin."
   }
 ];
 
