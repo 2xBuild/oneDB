@@ -11,7 +11,7 @@ interface FAQItem {
 const faqData: FAQItem[] = [
   {
     question: "What is oneDB?",
-    answer: "oneDB is a comprehensive database platform that brings together projects, ideas, people, apps, and resources in one place. It's designed to help you discover, contribute, and build with the community."
+    answer: "oneDB is both a curated collection of people, apps, and resources in tech and a platform to share your projects and ideas with the community."
   },
   {
     question: "How does the Arena work?",
