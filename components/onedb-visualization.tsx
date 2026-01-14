@@ -96,7 +96,7 @@ export default function OneDBVisualization() {
 
                 {/* Hero Title */}
                 <h1 className="text-4xl sm:text-5xl lg:text-7xl font-bold tracking-tight leading-tight text-foreground mb-6">
-                    A curated collection of people, apps, and resources in tech.
+                    One database for everything in tech.
                 </h1>
 
                 {/* Description */}
