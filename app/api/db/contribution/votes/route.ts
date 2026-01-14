@@ -36,7 +36,11 @@ export async function POST(request: NextRequest) {
     const bodyWithReqType = { ...body, reqType };
     const validated = createVoteSchema.parse(bodyWithReqType);
 
-    const vote = await votesService.vote(user.id, validated);
+    // reqType is always set by the route handler above, so we can safely assert it's present
+    const vote = await votesService.vote(user.id, {
+      ...validated,
+      reqType: reqType as "add" | "edit" | "delete",
+    });
 
     // Check if submission should be approved (50 votes minimum + 3x upvote ratio)
     const approvalStatus = await votesService.checkApprovalStatus(
