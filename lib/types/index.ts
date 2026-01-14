@@ -84,6 +84,8 @@ export interface Person {
   followersCount: number | null;
   submittedBy: string;
   status: string;
+  contributionType?: string | null;
+  originalId?: string | null;
   createdAt: Date;
   updatedAt: Date;
   deletedAt: Date | null;
@@ -99,6 +101,8 @@ export interface Resource {
   image: string | null;
   submittedBy: string;
   status: string;
+  contributionType?: string | null;
+  originalId?: string | null;
   createdAt: Date;
   updatedAt: Date;
   deletedAt: Date | null;
@@ -114,6 +118,8 @@ export interface App {
   logo: string | null;
   submittedBy: string;
   status: string;
+  contributionType?: string | null;
+  originalId?: string | null;
   createdAt: Date;
   updatedAt: Date;
   deletedAt: Date | null;
@@ -126,6 +132,7 @@ export interface Vote {
   resourceId: string | null;
   appId: string | null;
   voteType: "upvote" | "downvote";
+  reqType: "add" | "edit" | "delete";
   createdAt: Date;
 }
 
@@ -238,6 +245,7 @@ export interface CreateVoteInput {
   resourceId?: string;
   appId?: string;
   voteType: "upvote" | "downvote";
+  reqType: "add" | "edit" | "delete";
 }
 
 // API types

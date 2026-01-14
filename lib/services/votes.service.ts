@@ -9,6 +9,7 @@ export interface CreateVoteInput {
   resourceId?: string;
   appId?: string;
   voteType: "upvote" | "downvote";
+  reqType: "add" | "edit" | "delete";
 }
 
 export class VotesService {
@@ -74,7 +75,7 @@ export class VotesService {
       // Update existing vote
       const [updated] = await db
         .update(votes)
-        .set({ voteType: data.voteType })
+        .set({ voteType: data.voteType, reqType: data.reqType })
         .where(eq(votes.id, existingVote.id))
         .returning();
       return updated;
@@ -91,6 +92,7 @@ export class VotesService {
         resourceId: data.resourceId || null,
         appId: data.appId || null,
         voteType: data.voteType,
+        reqType: data.reqType,
       })
       .returning();
 

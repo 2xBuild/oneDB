@@ -5,6 +5,7 @@ export const createVoteSchema = z.object({
   resourceId: z.string().optional(),
   appId: z.string().optional(),
   voteType: z.enum(["upvote", "downvote"]),
+  reqType: z.enum(["add", "edit", "delete"]).optional(),
 }).refine(
   (data) => data.peopleId || data.resourceId || data.appId,
   {

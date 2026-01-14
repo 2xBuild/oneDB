@@ -16,7 +16,25 @@ export async function POST(request: NextRequest) {
   try {
     const user = await requireAuth();
     const body = await request.json();
-    const validated = createVoteSchema.parse(body);
+    
+    // Get the contribution to determine reqType from contributionType
+    let contributionType: string | null = null;
+    if (body.peopleId) {
+      const person = await peopleService.findById(body.peopleId);
+      contributionType = person.contributionType || "new";
+    } else if (body.resourceId) {
+      const resource = await resourcesService.findById(body.resourceId);
+      contributionType = resource.contributionType || "new";
+    } else if (body.appId) {
+      const app = await appsService.findById(body.appId);
+      contributionType = app.contributionType || "new";
+    }
+    
+    // Map contributionType to reqType: "new" -> "add", "edit" -> "edit", "delete" -> "delete"
+    const reqType = contributionType === "new" ? "add" : (contributionType === "edit" ? "edit" : "delete");
+    
+    const bodyWithReqType = { ...body, reqType };
+    const validated = createVoteSchema.parse(bodyWithReqType);
 
     const vote = await votesService.vote(user.id, validated);
 

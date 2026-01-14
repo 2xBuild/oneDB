@@ -1,0 +1,1 @@
+ALTER TABLE "votes" ADD COLUMN "req_type" text NOT NULL DEFAULT 'add';

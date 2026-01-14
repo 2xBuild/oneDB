@@ -13,6 +13,7 @@ export const votes = pgTable("votes", {
   resourceId: text("resource_id").references(() => resources.id, { onDelete: "cascade" }),
   appId: text("app_id").references(() => apps.id, { onDelete: "cascade" }),
   voteType: text("vote_type").notNull(), // "upvote" or "downvote"
+  reqType: text("req_type").notNull(), // "add", "edit", or "delete"
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 

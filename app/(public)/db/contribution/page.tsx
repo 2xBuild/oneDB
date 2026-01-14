@@ -12,6 +12,20 @@ export default function ContributorsPage() {
   const [contributorsData, setContributorsData] = useState<ContributorsData | null>(null);
   const [loading, setLoading] = useState(true);
 
+  // Helper function to get request type badge info
+  const getRequestTypeBadge = (contributionType: string | null | undefined) => {
+    if (!contributionType || contributionType === "new") {
+      return { label: "Add", color: "bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400 border-blue-300 dark:border-blue-700" };
+    }
+    if (contributionType === "edit") {
+      return { label: "Edit", color: "bg-yellow-100 dark:bg-yellow-900/30 text-yellow-700 dark:text-yellow-400 border-yellow-300 dark:border-yellow-700" };
+    }
+    if (contributionType === "delete") {
+      return { label: "Delete", color: "bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400 border-red-300 dark:border-red-700" };
+    }
+    return { label: "Add", color: "bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400 border-blue-300 dark:border-blue-700" };
+  };
+
   useEffect(() => {
     fetchContributorsData();
     // Refreshing every 30 seconds
@@ -127,6 +141,11 @@ export default function ContributorsPage() {
     // Overall progress is the minimum of both (both must be met)
     const progress = Math.min(progressMinVotes, progressRatio);
 
+    // Calculate how many more votes are needed
+    const votesNeededForMin = approvalStatus.votesNeededForMin || 0;
+    const votesNeededForRatio = approvalStatus.votesNeededForRatio || 0;
+    const maxVotesNeeded = Math.max(votesNeededForMin, votesNeededForRatio);
+
     return (
       <div className="mt-3 space-y-2">
         <div className="flex items-center justify-between text-xs">
@@ -144,29 +163,11 @@ export default function ContributorsPage() {
             style={{ width: `${progress}%` }}
           />
         </div>
-        <div className="text-xs text-muted-foreground space-y-1">
+        <div className="text-xs text-muted-foreground">
           {approvalStatus.approved ? (
-            <span className="text-green-600">✓ Meets approval requirements (50+ votes & 3x ratio)</span>
+            <span className="text-green-600">✓ Approved</span>
           ) : (
-            <div className="space-y-1">
-              {!meetsMinVotes && (
-                <div>
-                  <span className="font-medium">Minimum votes:</span> Needs {approvalStatus.votesNeededForMin || 0} more vote{(approvalStatus.votesNeededForMin || 0) !== 1 ? "s" : ""} to reach {minVotes} total ({total}/{minVotes})
-                </div>
-              )}
-              {!meetsRatio && (
-                <div>
-                  <span className="font-medium">Healthy ratio:</span> {downvotes === 0 ? (
-                    <>Needs {approvalStatus.votesNeededForRatio || 0} more upvote{(approvalStatus.votesNeededForRatio || 0) !== 1 ? "s" : ""} (minimum {minVotes} upvotes)</>
-                  ) : (
-                    <>Needs {approvalStatus.votesNeededForRatio || 0} more upvote{(approvalStatus.votesNeededForRatio || 0) !== 1 ? "s" : ""} to reach {ratioThreshold}x ratio ({upvotes} up / {downvotes} down = {downvotes > 0 ? (upvotes / downvotes).toFixed(1) : 0}x, need {ratioThreshold}x)</>
-                  )}
-                </div>
-              )}
-              {meetsMinVotes && meetsRatio && (
-                <span className="text-green-600">✓ All requirements met!</span>
-              )}
-            </div>
+            <span>Needs {maxVotesNeeded} more vote{maxVotesNeeded !== 1 ? "s" : ""}</span>
           )}
         </div>
       </div>
@@ -216,7 +217,17 @@ export default function ContributorsPage() {
                             />
                           )}
                           <div className="flex-1 min-w-0">
-                            <h4 className="text-lg font-bold mb-1">{person.name}</h4>
+                            <div className="flex items-center gap-2 mb-1">
+                              <h4 className="text-lg font-bold">{person.name}</h4>
+                              {(() => {
+                                const badge = getRequestTypeBadge(person.contributionType);
+                                return (
+                                  <span className={`text-xs px-2 py-0.5 rounded font-semibold border ${badge.color}`}>
+                                    {badge.label}
+                                  </span>
+                                );
+                              })()}
+                            </div>
                             {person.submitter && (
                               <div className="flex items-center gap-2 text-xs text-muted-foreground mb-2">
                                 <User className="h-3 w-3" />
@@ -266,16 +277,15 @@ export default function ContributorsPage() {
                         <div className="space-y-3">
                           <div className="flex items-center justify-between">
                             <div className="text-sm">
-                              <div className="flex items-center gap-2">
-                                <span className="text-green-600 font-medium">
-                                  ↑ {person.votes?.upvotes || 0} upvote{(person.votes?.upvotes || 0) !== 1 ? "s" : ""}
+                              <div className="flex items-center gap-3">
+                                <span className="text-green-600 font-medium flex items-center gap-1">
+                                  <ThumbsUp className="h-4 w-4" />
+                                  {person.votes?.upvotes || 0}
                                 </span>
-                                <span className="text-red-600 font-medium">
-                                  ↓ {person.votes?.downvotes || 0} downvote{(person.votes?.downvotes || 0) !== 1 ? "s" : ""}
+                                <span className="text-red-600 font-medium flex items-center gap-1">
+                                  <ThumbsDown className="h-4 w-4" />
+                                  {person.votes?.downvotes || 0}
                                 </span>
-                              </div>
-                              <div className="text-muted-foreground">
-                                {person.votes?.percentage.toFixed(1) || 0}% positive
                               </div>
                               {userVote && (
                                 <div className="text-xs text-blue-600 mt-1">
@@ -359,7 +369,17 @@ export default function ContributorsPage() {
                             />
                           )}
                           <div className="flex-1 min-w-0">
-                            <h4 className="text-lg font-bold mb-1">{resource.title}</h4>
+                            <div className="flex items-center gap-2 mb-1">
+                              <h4 className="text-lg font-bold">{resource.title}</h4>
+                              {(() => {
+                                const badge = getRequestTypeBadge(resource.contributionType);
+                                return (
+                                  <span className={`text-xs px-2 py-0.5 rounded font-semibold border ${badge.color}`}>
+                                    {badge.label}
+                                  </span>
+                                );
+                              })()}
+                            </div>
                             {resource.submitter && (
                               <div className="flex items-center gap-2 text-xs text-muted-foreground mb-2">
                                 <User className="h-3 w-3" />
@@ -404,16 +424,15 @@ export default function ContributorsPage() {
                         <div className="space-y-3">
                           <div className="flex items-center justify-between">
                             <div className="text-sm">
-                              <div className="flex items-center gap-2">
-                                <span className="text-green-600 font-medium">
-                                  ↑ {resource.votes?.upvotes || 0} upvote{(resource.votes?.upvotes || 0) !== 1 ? "s" : ""}
+                              <div className="flex items-center gap-3">
+                                <span className="text-green-600 font-medium flex items-center gap-1">
+                                  <ThumbsUp className="h-4 w-4" />
+                                  {resource.votes?.upvotes || 0}
                                 </span>
-                                <span className="text-red-600 font-medium">
-                                  ↓ {resource.votes?.downvotes || 0} downvote{(resource.votes?.downvotes || 0) !== 1 ? "s" : ""}
+                                <span className="text-red-600 font-medium flex items-center gap-1">
+                                  <ThumbsDown className="h-4 w-4" />
+                                  {resource.votes?.downvotes || 0}
                                 </span>
-                              </div>
-                              <div className="text-muted-foreground">
-                                {resource.votes?.percentage.toFixed(1) || 0}% positive
                               </div>
                               {userVote && (
                                 <div className="text-xs text-blue-600 mt-1">
@@ -497,7 +516,17 @@ export default function ContributorsPage() {
                             />
                           )}
                           <div className="flex-1 min-w-0">
-                            <h4 className="text-lg font-bold mb-1">{app.name}</h4>
+                            <div className="flex items-center gap-2 mb-1">
+                              <h4 className="text-lg font-bold">{app.name}</h4>
+                              {(() => {
+                                const badge = getRequestTypeBadge(app.contributionType);
+                                return (
+                                  <span className={`text-xs px-2 py-0.5 rounded font-semibold border ${badge.color}`}>
+                                    {badge.label}
+                                  </span>
+                                );
+                              })()}
+                            </div>
                             {app.submitter && (
                               <div className="flex items-center gap-2 text-xs text-muted-foreground mb-2">
                                 <User className="h-3 w-3" />
@@ -542,16 +571,15 @@ export default function ContributorsPage() {
                         <div className="space-y-3">
                           <div className="flex items-center justify-between">
                             <div className="text-sm">
-                              <div className="flex items-center gap-2">
-                                <span className="text-green-600 font-medium">
-                                  ↑ {app.votes?.upvotes || 0} upvote{(app.votes?.upvotes || 0) !== 1 ? "s" : ""}
+                              <div className="flex items-center gap-3">
+                                <span className="text-green-600 font-medium flex items-center gap-1">
+                                  <ThumbsUp className="h-4 w-4" />
+                                  {app.votes?.upvotes || 0}
                                 </span>
-                                <span className="text-red-600 font-medium">
-                                  ↓ {app.votes?.downvotes || 0} downvote{(app.votes?.downvotes || 0) !== 1 ? "s" : ""}
+                                <span className="text-red-600 font-medium flex items-center gap-1">
+                                  <ThumbsDown className="h-4 w-4" />
+                                  {app.votes?.downvotes || 0}
                                 </span>
-                              </div>
-                              <div className="text-muted-foreground">
-                                {app.votes?.percentage.toFixed(1) || 0}% positive
                               </div>
                               {userVote && (
                                 <div className="text-xs text-blue-600 mt-1">

@@ -15,6 +15,13 @@
       "when": 1768061370181,
       "tag": "0001_curved_sleeper",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1768399813985,
+      "tag": "0002_nifty_lord_tyger",
+      "breakpoints": true
     }
   ]
 }
